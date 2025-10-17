@@ -1,5 +1,5 @@
-
 ## CLASSE DE BASE : PIECE
+from portes import Porte 
 
 class Piece:
     """
@@ -14,19 +14,13 @@ class Piece:
         Args:
             nom (str): Nom de la pièce.
             couleur (str): Couleur thématique de la pièce.
-            portes (dict): Dictionnaire indiquant la présence de portes (haut, bas, gauche, droite).
-            cout_gemmes (int): Coût en gemmes pour drafter la pièce.
-            objets (list): Liste d'objets présents dans la pièce.
-            effet (str): Effet principal de la pièce.
-            rarete (int): Rareté de la pièce (0 = commune, 1 = rare, etc.).
-            condition_placement (str): Condition ou restriction de placement.
-            image_path (str): Chemin vers l'image représentant la pièce.
-            secrets (list): Liste des secrets ou interactions spéciales de la pièce.
-            upgrades (list): Liste des améliorations possibles pour la pièce.
+            portes (dict): Dictionnaire (DU CATALOGUE) indiquant la présence de portes (haut, bas, gauche, droite).
+            ...
         """
         self.nom = nom
         self.couleur = couleur
-        self.portes = portes if portes else {"haut": False, "bas": False, "gauche": False, "droite": False}
+        # Stocke la configuration de base (quelles portes EXISTENT)
+        self.portes_config = portes if portes else {"haut": False, "bas": False, "gauche": False, "droite": False}
         self.cout_gemmes = cout_gemmes
         self.objets = objets if objets else []
         self.effet = effet
@@ -35,5 +29,34 @@ class Piece:
         self.image_path = image_path
         self.secrets = secrets if secrets else []
         self.upgrades = upgrades if upgrades else []
+        
+        
+        # Ce dictionnaire stockera les VRAIS objets Porte (avec niveau, état ouverte/fermée)
+        # Il sera rempli par le Manoir lors du placement de la pièce.
+        self.portes_objets = {
+            "haut": None,
+            "bas": None,
+            "gauche": None,
+            "droite": None
+        }
 
-    
+    def get_porte(self, direction: str) -> Porte | None:
+        """
+        Récupère l'objet Porte dans une direction donnée.
+        """
+        return self.portes_objets.get(direction)
+
+    def get_door_lock_level(self, direction: str) -> int:
+        """
+        Récupère le niveau de verrouillage (0, 1, 2) d'une porte dans une direction.
+        Requis par jeu.py
+        """
+        porte = self.get_porte(direction)
+        if porte:
+            # Si la porte est déjà ouverte, elle n'a plus de niveau de verrouillage
+            if porte.ouverte:
+                return 0
+            return porte.niveau
+        
+        # S'il n'y a pas d'objet Porte, c'est un mur (ou une porte inexistante)
+        return -1 # On retourne -1 pour signifier "pas de porte"
