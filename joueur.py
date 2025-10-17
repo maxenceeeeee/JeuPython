@@ -69,7 +69,7 @@ class Joueur:
                 return True # Ouverture sans clé grâce au Kit 
             elif self.inventaire.depenser_cles():
                 return True # Ouverture en dépensant une clé
-            else
+            else:
                 return False
         
         elif niveau == 2:
@@ -102,3 +102,5 @@ class Joueur:
         """
         return self.inventaire.a_objet_permanent("Pelle")
         
+
+}
