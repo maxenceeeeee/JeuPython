@@ -10,6 +10,8 @@ class Joueur:
         self.marteau = False
         self.kitcrochetage = False
         self.detecteur_metal = False
+        self.loupearchitecte = False
+        self.piecefauxfonds = False
         self.patte_lapin = False
         self.position_ligne = 8
         self.position_colonne = 2
