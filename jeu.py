@@ -1,5 +1,6 @@
 import pygame 
 from joueur import Joueur
+from Manoir import Manoir 
 
 colonnes_jeu = 5
 lignes_jeu = 9 
@@ -27,13 +28,25 @@ class Jeu :
         pygame.display.set_caption("Blue Prince Game")
         self.screen = pygame.display.set_mode((affichage_largeur, affichage_hauteur))
         self.clock = pygame.time.Clock()
+        
         self.joueur = Joueur() 
+        self.manoir = Manoir() 
+        
         self.flag_en_cours = True
         self.game_over = False
         self.victoire = False
+        
+        self.etat_jeu = "Deplacement" # États possibles: "Deplacement", "Selection pieces"
+        self.pieces_proposees = []
+        self.message_statut = "Utilisez ZQSD pour vous déplacer."
 
         self.font_petit = pygame.font.Font(None, 30)
-        self.font_grand = pygame.font.Font(police, 30)
+        # Gestion de l'erreur si la police n'est pas trouvée
+        try:
+            self.font_grand = pygame.font.Font(police, 30)
+        except FileNotFoundError:
+            print(f"Attention : Police non trouvée à l'adresse {police}. Utilisation de la police par défaut.")
+            self.font_grand = pygame.font.Font(None, 40)
     
     def affichage_d_v(self): 
         fenetre_fin = pygame.Surface((affichage_largeur, affichage_hauteur), pygame.SRCALPHA)
@@ -63,7 +76,14 @@ class Jeu :
                 x = start_x_grille + c * nb_pixels_piece
                 y = start_y_grille + r * nb_pixels_piece
                 rect = pygame.Rect(x, y, nb_pixels_piece, nb_pixels_piece)
-                pygame.draw.rect(self.screen, (0, 0, 0), rect) 
+                
+                #Dessiner la pièce si elle existe ---
+                piece = self.manoir.get_piece_at(r, c)
+                if piece:
+                    # TODO: Charger et afficher piece.image_path
+                    pygame.draw.rect(self.screen, (50, 50, 150), rect) # Couleur temporaire
+                else:
+                    pygame.draw.rect(self.screen, (0, 0, 0), rect) 
                 
         bords_jeu = pygame.Rect(start_x_grille - 2, start_y_grille - 2, largeur_grille_seule + 4, hauteur_grille_seule + 4)
         pygame.draw.rect(self.screen, (255, 255, 255), bords_jeu, 2)
@@ -73,31 +93,30 @@ class Jeu :
         x = start_x_grille + largeur_grille_seule + espace_inventiare
         y = start_y_grille
         
-        inventaire = pygame.Rect(x, y, largeur_inventaire, hauteur_grille_seule)
-        pygame.draw.rect(self.screen, (30, 30, 60), inventaire)
+        inventaire_rect = pygame.Rect(x, y, largeur_inventaire, hauteur_grille_seule)
+        pygame.draw.rect(self.screen, (30, 30, 60), inventaire_rect)
 
         self.screen.blit(self.font_grand.render("Inventaire", True, (255, 255, 255)), (x+5, y+15))
 
         dicto_inventaire = {
             'PERMANENT': [
-                ("Kit de Crochetage", self.joueur.kitcrochetage),
-                ("Patte de Lapin", self.joueur.patte_lapin),
-                ("Pelle", self.joueur.pelle),
-                ("Marteau", self.joueur.marteau),
-                ("Détecteur de Métaux", self.joueur.detecteur_metal),],
+                ("Kit de Crochetage", self.joueur.inventaire.a_objet_permanent("Kit de Crochetage")),
+                ("Patte de Lapin", self.joueur.inventaire.a_objet_permanent("Patte de Lapin")),
+                ("Pelle", self.joueur.inventaire.a_objet_permanent("Pelle")),
+                ("Marteau", self.joueur.inventaire.a_objet_permanent("Marteau")),
+                ("Détecteur de Métaux", self.joueur.inventaire.a_objet_permanent("Détecteur de Métaux")),],
             'CONSOMMABLE': [
-                ("Pas", self.joueur.pas),
-                ("Pièces d'or", self.joueur.pieces_or),
-                ("Gemmes", self.joueur.gemmes),
-                ("Clés", self.joueur.cles),
-                ("Dés", self.joueur.des),]
+                ("Pas", self.joueur.inventaire.pas),
+                ("Pièces d'or", self.joueur.inventaire.pieces_or),
+                ("Gemmes", self.joueur.inventaire.gemmes),
+                ("Clés", self.joueur.inventaire.cles),
+                ("Dés", self.joueur.inventaire.des),]
         }
         
         y_permanent = y + 90
         for n, q in dicto_inventaire['PERMANENT']:
             if q :
                 self.screen.blit(self.font_petit.render(n, True, (0, 128, 0)), (x + 10, y_permanent))
-                self.screen.blit
                 y_permanent += 50
             else :
                 self.screen.blit(self.font_petit.render(n, True, (255, 255, 255)), (x + 10, y_permanent))
@@ -111,8 +130,8 @@ class Jeu :
         
         
     def affichage_curseur(self): 
-        curseur_c = colonnes_jeu // 2
-        curseur_r = lignes_jeu - 1
+        curseur_c = self.joueur.position_colonne
+        curseur_r = self.joueur.position_ligne
         
         x = start_x_grille + curseur_c * nb_pixels_piece
         y = start_y_grille + curseur_r * nb_pixels_piece
@@ -121,42 +140,63 @@ class Jeu :
 
     def deplacement(self, direction):
         
+        # On ne peut pas se déplacer si on doit choisir une pièce
+        if self.etat_jeu == "Selection pieces":
+            self.message_statut = "Veuillez choisir une pièce (Touches 1, 2, 3)"
+            return
+
         nouvelle_ligne, nouvelle_colonne = self.joueur.calcul_coordonnees_casead(direction)
         
         if not (0 <= nouvelle_ligne < lignes_jeu and 0 <= nouvelle_colonne < colonnes_jeu):
-            self.message_statut = "C'est un mur"
+            self.message_statut = "C'est un mur extérieur."
             return 
             
         destination_piece = self.manoir.get_piece_at(nouvelle_ligne, nouvelle_colonne)
         piece_actuelle = self.manoir.get_piece_at(self.joueur.position_ligne, self.joueur.position_colonne)
         
         lock_level = piece_actuelle.get_door_lock_level(direction) 
+        
+        if lock_level == -1:
+            self.message_statut = "Il n'y a pas de porte dans cette direction."
+            return
 
         if destination_piece is not None:
+            # La pièce existe, on vérifie juste si la porte est ouverte (lock_level 0)
+            if lock_level != 0:
+                self.message_statut = "La porte est refermée ?" # Cas étrange
+                return
+                
             if self.joueur.deplacer_vers(nouvelle_ligne, nouvelle_colonne):
-                self.message_statut = ""
+                self.message_statut = f"Vous entrez dans {destination_piece.nom}"
             else:
-                self.game_over = True
+                self.game_over = True # Plus de pas
             return
         
         if self.joueur.ouverture_porte(lock_level) == True:
-            self.pieces_proposees = self.manoir.tirer_trois_pieces(self.joueur.position_ligne, nouvelle_colonne, nouvelle_ligne, direction)
+            self.pieces_proposees = self.manoir.tirer_trois_pieces(
+                self.joueur.position_ligne, self.joueur.position_colonne, 
+                nouvelle_ligne, nouvelle_colonne, direction
+            )
             
             if not self.pieces_proposees:
-                 self.message_statut = "Perdu ! Plus de pièces disponibles"
+                 self.message_statut = "Perdu ! Plus de pièces disponibles dans la pioche."
                  self.game_over = True
                  return
 
             self.etat_jeu = "Selection pieces"
-            self.message_statut = "Choississez une piece"
+            self.message_statut = "Choississez une piece (1, 2, 3)"
+            
+            # TODO: Il manque la logique pour gérer la sélection (dans self.quitter)
+            # et appeler self.manoir.placer_piece(...)
             
         else:
-            if lock_level == 1 and self.joueur.kitcrochetage:
-                 self.message_statut = "Porte verrouillée et vous n'avez plus de clé"
+            # Échec de l'ouverture
+            if lock_level == 1 and self.joueur.inventaire.a_objet_permanent("Kit de Crochetage"):
+                 self.message_statut = "Porte verrouillée (Niv 1) et vous n'avez plus de clé."
             elif lock_level == 2:
-                 self.message_statut = "Porte verrouillée à double tour : une clé est nécessaire."
+                 self.message_statut = "Porte verrouillée (Niv 2) : une clé est nécessaire."
             else:
-                 self.message_statut = "Porte verrouillée : une clé ou kit de crochetage est nécessaire"
+                 self.message_statut = "Porte verrouillée (Niv 1) : Clé ou Kit nécessaire."
                  
                  
     def quitter(self):
@@ -167,7 +207,8 @@ class Jeu :
                 
                 if (self.game_over == True and event.key == pygame.K_RETURN):
                     self.flag_en_cours = False
-                if not self.game_over :
+                    
+                if not self.game_over and self.etat_jeu == "Deplacement":
                     if event.key == pygame.K_z :
                         self.deplacement('up')
                     if event.key == pygame.K_q :
@@ -177,8 +218,15 @@ class Jeu :
                     if event.key == pygame.K_d :
                         self.deplacement('right')
                 
+                # TODO: Gérer l'état "Selection pieces"
+                # if not self.game_over and self.etat_jeu == "Selection pieces":
+                #    if event.key == pygame.K_1:
+                #        choix = self.pieces_proposees[0]
+                #        ... (logique de placement)
+                
+                
     def verification_fin_jeu(self):
-        if (self.joueur.pas <= 0 or self.victoire == True): 
+        if (self.joueur.inventaire.pas <= 0 or self.victoire == True): 
             self.game_over = True
             
     def en_cours_gestion(self):
@@ -190,6 +238,10 @@ class Jeu :
                 self.affichage_grille()
                 self.affichage_inventaire()
                 self.affichage_curseur()
+                
+                # TODO: Afficher les pièces proposées si etat_jeu == "Selection pieces"
+                # TODO: Afficher self.message_statut
+                
             else :
                 self.affichage_d_v()
             
