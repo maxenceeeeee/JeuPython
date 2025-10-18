@@ -1,15 +1,7 @@
 
-=======
 
 ## CLASSE DE BASE : PIECE
 
-# piece.py
-from .porte import Porte
-
-class Piece:
-    """Représente une pièce du manoir, avec sa couleur, ses items et ses portes."""
-
- # piece.py
 from .porte import Porte
 
 class Piece:
