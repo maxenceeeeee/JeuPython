@@ -9,7 +9,7 @@ class Joueur:
     ressources à l'objet Inventaire.
     """
     def __init__(self):
-     #Le joueur possède son inventaire
+       # Le joueur possède son inventaire
         self.inventaire = Inventaire() 
         # Le manoir est une grille de 5x9. On commence à l'entrée (ligne 8, colonne 2).
         # (Si la grille fait 5 lignes, les indices vont de 0 à 4. Si elle fait 9 lignes, de 0 à 8)
@@ -20,7 +20,7 @@ class Joueur:
         # Tous les attributs de ressources (pas, cles, pelle, etc.) ont été déplacés 
         # vers l'objet self.inventaire.
         
-    #MÉTHODES DE DÉPLACEMENT ET POSITION
+    # MÉTHODES DE DÉPLACEMENT ET POSITION
     
     def calcul_coordonnees_casead(self, choix: str) -> tuple[int, int]:
         """Calcule les coordonnées de la case adjacente en fonction du choix ('up', 'down', etc.)."""
@@ -37,7 +37,7 @@ class Joueur:
         # Les coordonnées renvoyées sont les coordonnées absolues de la nouvelle case
         return self.position_ligne + case_ligne, self.position_colonne + case_colonne
     
-    def deplacer_vers(self, posx: int, posy: int) -> bool:
+    def deplacer_vers(self, nouvelle_ligne: int, nouvelle_colonne: int) -> bool:
         """
         Déplace le joueur et décrémente les pas.
         DÉLÉGATION: Utilise les pas stockés dans l'inventaire.
@@ -49,13 +49,13 @@ class Joueur:
         # Décrémente les pas directement sur l'inventaire
         self.inventaire.pas -= 1 # 1 pas perdu à chaque déplacement 
         # Met à jour la position
-        self.position_ligne = posx
-        self.position_colonne = posy
+        self.position_ligne = nouvelle_ligne
+        self.position_colonne = nouvelle_colonne
         return True
         
     # INTERACTION AVEC L'INVENTAIRE
     
-    def ouverture_porte(self, niveau: int) -> bool:    
+    def ouverture_porte(self, niveau: int) -> bool: 
         """
         Vérifie si le joueur peut ouvrir la porte en fonction du niveau de verrouillage.
         DÉLÉGATION: Utilise les clés et le Kit de Crochetage de l'inventaire.
@@ -64,17 +64,19 @@ class Joueur:
             return True # Porte déverrouillée
         
         elif niveau == 1: 
-            #Niveau 1: Utilisation du Kit de crochetage (Permanent) ou d'une clé (Consommable) 
+            # Niveau 1: Utilisation du Kit de crochetage (Permanent) ou d'une clé (Consommable) 
             if self.inventaire.a_objet_permanent("Kit de Crochetage"):
                 return True # Ouverture sans clé grâce au Kit 
-            elif self.inventaire.depenser_cles():
+            # On vérifie si on a une clé. La dépense sera gérée dans Jeu.deplacement si True.
+            elif self.inventaire.cles > 0:
                 return True # Ouverture en dépensant une clé
             else:
                 return False
         
         elif niveau == 2:
-            #Niveau 2: Coûte une clé, le Kit de crochetage ne fonctionne pas
-            if self.inventaire.depenser_cles():
+            # Niveau 2: Coûte une clé, le Kit de crochetage ne fonctionne pas
+            # On vérifie si on a une clé. La dépense sera gérée dans Jeu.deplacement si True.
+            if self.inventaire.cles > 0:
                 return True # Ouverture en dépensant une clé 
             else:
                 return False
@@ -86,10 +88,10 @@ class Joueur:
         Vérifie si le joueur peut ouvrir un coffre (Marteau ou Clé).
         DÉLÉGATION: Vérifie les objets permanents et les clés dans l'inventaire.
         """
-        #Peut être ouvert avec le marteau (Permanent) 
+        # Peut être ouvert avec le marteau (Permanent) 
         if self.inventaire.a_objet_permanent("Marteau"):
             return True
-        #Peut être ouvert avec une clé (Consommable)
+        # Peut être ouvert avec une clé (Consommable)
         if self.inventaire.cles > 0: 
             # On ne la dépense pas ici, juste on vérifie la possession, la dépense aura lieu si le joueur confirme l'action
             return True
@@ -101,6 +103,3 @@ class Joueur:
         DÉLÉGATION: Vérifie l'objet permanent 'Pelle'.
         """
         return self.inventaire.a_objet_permanent("Pelle")
-        
-
-}

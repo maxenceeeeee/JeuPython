@@ -1,19 +1,19 @@
 import pygame 
 from joueur import Joueur
-from Manoir import Manoir 
-
+from manoir import Manoir 
+from ClassePiece import *
 colonnes_jeu = 5
 lignes_jeu = 9 
 
-nb_pixels_piece = 70
-start_x_grille = 50
-start_y_grille = 50
+nb_pixels_piece = 80
+start_x_grille = 20
+start_y_grille = 20
 
 largeur_grille_seule = colonnes_jeu * nb_pixels_piece 
 hauteur_grille_seule = lignes_jeu * nb_pixels_piece
 
-largeur_inventaire = 450
-espace_inventiare = 100
+largeur_inventaire = 500
+espace_inventiare = 50
 
 # affichage complet jeu
 affichage_largeur = start_x_grille + largeur_grille_seule + espace_inventiare + largeur_inventaire + start_x_grille
@@ -77,11 +77,10 @@ class Jeu :
                 y = start_y_grille + r * nb_pixels_piece
                 rect = pygame.Rect(x, y, nb_pixels_piece, nb_pixels_piece)
                 
-                #Dessiner la pièce si elle existe ---
                 piece = self.manoir.get_piece_at(r, c)
-                if piece:
-                    # TODO: Charger et afficher piece.image_path
-                    pygame.draw.rect(self.screen, (50, 50, 150), rect) # Couleur temporaire
+                if piece and piece.image:
+                    image_redim = pygame.transform.scale(piece.image, (nb_pixels_piece, nb_pixels_piece))
+                    self.screen.blit(image_redim, (x, y))
                 else:
                     pygame.draw.rect(self.screen, (0, 0, 0), rect) 
                 
@@ -94,7 +93,7 @@ class Jeu :
         y = start_y_grille
         
         inventaire_rect = pygame.Rect(x, y, largeur_inventaire, hauteur_grille_seule)
-        pygame.draw.rect(self.screen, (30, 30, 60), inventaire_rect)
+        pygame.draw.rect(self.screen, (0, 0, 0), inventaire_rect)
 
         self.screen.blit(self.font_grand.render("Inventaire", True, (255, 255, 255)), (x+5, y+15))
 
@@ -139,66 +138,71 @@ class Jeu :
         pygame.draw.rect(self.screen, (255, 255, 0), curseur, 2)
 
     def deplacement(self, direction):
-        
-        # On ne peut pas se déplacer si on doit choisir une pièce
         if self.etat_jeu == "Selection pieces":
             self.message_statut = "Veuillez choisir une pièce (Touches 1, 2, 3)"
             return
 
         nouvelle_ligne, nouvelle_colonne = self.joueur.calcul_coordonnees_casead(direction)
-        
+
         if not (0 <= nouvelle_ligne < lignes_jeu and 0 <= nouvelle_colonne < colonnes_jeu):
             self.message_statut = "C'est un mur extérieur."
             return 
-            
-        destination_piece = self.manoir.get_piece_at(nouvelle_ligne, nouvelle_colonne)
+
         piece_actuelle = self.manoir.get_piece_at(self.joueur.position_ligne, self.joueur.position_colonne)
-        
-        lock_level = piece_actuelle.get_door_lock_level(direction) 
-        
+        destination_piece = self.manoir.get_piece_at(nouvelle_ligne, nouvelle_colonne)
+
+        lock_level = piece_actuelle.niveau_porte(direction)
+
         if lock_level == -1:
             self.message_statut = "Il n'y a pas de porte dans cette direction."
             return
 
-        if destination_piece is not None:
-            # La pièce existe, on vérifie juste si la porte est ouverte (lock_level 0)
-            if lock_level != 0:
-                self.message_statut = "La porte est refermée ?" # Cas étrange
-                return
-                
-            if self.joueur.deplacer_vers(nouvelle_ligne, nouvelle_colonne):
-                self.message_statut = f"Vous entrez dans {destination_piece.nom}"
-            else:
-                self.game_over = True # Plus de pas
-            return
-        
-        if self.joueur.ouverture_porte(lock_level) == True:
-            self.pieces_proposees = self.manoir.tirer_trois_pieces(
-                self.joueur.position_ligne, self.joueur.position_colonne, 
-                nouvelle_ligne, nouvelle_colonne, direction
-            )
+        # LOGIQUE D'OUVERTURE ET DE DÉPLACEMENT 
+        if self.joueur.ouverture_porte(lock_level):
+            # Si la porte est déverrouillée (niveau 0) ou si le joueur a la clé/kit (niveaux 1/2)
             
-            if not self.pieces_proposees:
-                 self.message_statut = "Perdu ! Plus de pièces disponibles dans la pioche."
-                 self.game_over = True
-                 return
-
-            self.etat_jeu = "Selection pieces"
-            self.message_statut = "Choississez une piece (1, 2, 3)"
-            
-            # TODO: Il manque la logique pour gérer la sélection (dans self.quitter)
-            # et appeler self.manoir.placer_piece(...)
-            
-        else:
-            # Échec de l'ouverture
-            if lock_level == 1 and self.joueur.inventaire.a_objet_permanent("Kit de Crochetage"):
-                 self.message_statut = "Porte verrouillée (Niv 1) et vous n'avez plus de clé."
+            # Pour les niveaux 1 et 2, on doit dépenser la clé/kit. 
+            # Comme l'ouverture_porte du Joueur vérifie seulement la *possession*, 
+            # on doit gérer la dépense ici si c'est nécessaire.
+            if lock_level == 1 and not self.joueur.inventaire.a_objet_permanent("Kit de Crochetage"):
+                 self.joueur.inventaire.depenser_cles()
             elif lock_level == 2:
-                 self.message_statut = "Porte verrouillée (Niv 2) : une clé est nécessaire."
+                 self.joueur.inventaire.depenser_cles()
+
+            if destination_piece:
+                if self.joueur.deplacer_vers(nouvelle_ligne, nouvelle_colonne):
+                    self.message_statut = f"Vous entrez dans {destination_piece.nom}"
+                else:
+                    self.game_over = True
             else:
-                 self.message_statut = "Porte verrouillée (Niv 1) : Clé ou Kit nécessaire."
-                 
-                 
+                self.pieces_proposees = self.manoir.tirer_trois_pieces(
+                    self.joueur.position_ligne,
+                    self.joueur.position_colonne,
+                    nouvelle_ligne,
+                    nouvelle_colonne,
+                    direction
+                )
+
+                if not self.pieces_proposees:
+                    self.message_statut = "Perdu ! Plus de pièces disponibles dans la pioche."
+                    self.game_over = True
+                    return
+
+                self.etat_jeu = "Selection pieces"
+                self.message_statut = "Choisissez une pièce (1, 2, 3)"
+        else:
+            # MESSAGE D'ERREUR SI LA PORTE EST VERROUILLÉE ET QU'ON NE PEUT RIEN FAIRE
+            if lock_level == 1:
+                if not self.joueur.inventaire.a_objet_permanent("Kit de Crochetage") and self.joueur.inventaire.cles == 0:
+                     self.message_statut = "Porte verrouillée (Niv 1) : Clé ou Kit nécessaire."
+                else: # Ce cas ne devrait pas arriver si la logique du if est correcte
+                     self.message_statut = "Porte verrouillée (Niv 1) et vous n'avez pas de clé/kit."
+            elif lock_level == 2:
+                self.message_statut = "Porte verrouillée (Niv 2) : une clé est nécessaire."
+            else:
+                self.message_statut = "Porte verrouillée (Niv X) : Accès impossible."
+
+
     def quitter(self):
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):

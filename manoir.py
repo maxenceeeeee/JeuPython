@@ -1,16 +1,16 @@
 # Manoir.py
 import random
 from ClassePiece import Piece
-from portes import Porte
-from Catalogues_pieces import CATALOGUE_PIECES
-from jeu import lignes_jeu, colonnes_jeu # Importe les constantes de la grille
+from ClassePorte import Porte
+from Catalogue_pieces import catalogue_pieces
+# from jeu import * # Gardez l'import si jeu est dans un fichier séparé
 
 class Manoir:
     """
     Gère la grille du manoir 5x9, la pioche de pièces
     et la logique de placement.
     """
-    def __init__(self):
+    def __init__(self, lignes_jeu=9, colonnes_jeu=5):
         self.lignes = lignes_jeu
         self.colonnes = colonnes_jeu
         
@@ -22,15 +22,16 @@ class Manoir:
         
         # Placer l'entrée
         self._placer_piece_depart()
+        self._placer_piece_finale()
 
     def _initialiser_pioche(self) -> list[Piece]:
         """
         Crée la pioche d'objets Piece à partir du catalogue de dictionnaires.
-        L'Entrance Hall est exclue de la pioche car elle est placée au début.
+        L'Entrance Hall et l'Antichambre sont exclues de la pioche.
         """
         pioche = []
-        for data_piece in CATALOGUE_PIECES:
-            if data_piece["nom"] != "Entrance Hall":
+        for data_piece in catalogue_pieces:
+            if data_piece["nom"] != "Entrance Hall" and data_piece["nom"] != "Antichambre": # <-- AJOUT
                 # Convertit le dictionnaire en objet Piece
                 pioche.append(Piece(**data_piece))
         return pioche
@@ -43,20 +44,43 @@ class Manoir:
         pos_ligne, pos_col = 8, 2 # Position de départ
         
         # Trouve les données de l'Entrance Hall
-        data_entree = next((p for p in CATALOGUE_PIECES if p["nom"] == "Entrance Hall"), None)
+        data_entree = next((p for p in catalogue_pieces if p["nom"] == "Entrance Hall"), None)
         
         if data_entree is None:
             raise ValueError("Erreur : 'Entrance Hall' non trouvée dans le catalogue.")
 
         piece_entree = Piece(**data_entree)
+        piece_entree.charger_image("Images.zip")
         self.grille[pos_ligne][pos_col] = piece_entree
         
         # Crée les objets Porte pour l'Entrance Hall
         # Les portes de départ sont toujours ouvertes et niveau 0
-        for direction, existe in piece_entree.portes_config.items():
+        for direction, existe in piece_entree.portes.items():
             if existe:
                 piece_entree.portes_objets[direction] = Porte(niveau=0, ouverte=True)
 
+
+    def _placer_piece_finale(self):
+        """
+        Trouve l'Antichambre, la crée et la place sur la grille (0, 2).
+        """
+        pos_ligne, pos_col = 0, 2 
+        # Recherche robuste pour éviter l'erreur si le nom n'est pas trouvé
+        data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antichambre"), None)
+        if data_finale is None:
+             data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antechamber"), None)
+        
+        if data_finale is None:
+             raise ValueError("Erreur : Les données de l'Antichambre (nom 'Antichambre' ou 'Antechamber') n'ont pas été trouvées dans 'Catalogue_pieces.py'.")
+
+        piece_finale = Piece(**data_finale)
+        piece_finale.charger_image("Images.zip")
+        self.grille[pos_ligne][pos_col] = piece_finale
+        for direction, existe in piece_finale.portes.items():
+            if existe:
+                niveau = Porte.generer_niveau_verrouillage(pos_ligne, self.lignes)
+                piece_finale.portes_objets[direction] = Porte(niveau=niveau, ouverte=False)
+                
     def get_piece_at(self, ligne: int, colonne: int) -> Piece | None:
         """
         Récupère l'objet Piece aux coordonnées données.
@@ -85,7 +109,7 @@ class Manoir:
         porte_entree_nom = directions_opposees[direction_mouvement]
 
         # 4. Créer les objets Porte pour la nouvelle pièce
-        for direction, existe in piece.portes_config.items():
+        for direction, existe in piece.portes.items():
             if existe:
                 if direction == porte_entree_nom:
                     # La porte par laquelle on entre est ouverte et niveau 0
@@ -99,7 +123,7 @@ class Manoir:
                 
         # 5. Mettre à jour la porte de la pièce d'origine (l'ouvrir)
         piece_precedente = self.get_piece_at(ligne_entree, col_entree)
-        if piece_precedente and piece_precedente.get_porte(direction_mouvement):
+        if piece_precedente and direction_mouvement in piece_precedente.portes_objets:
              piece_precedente.portes_objets[direction_mouvement].ouverte = True
 
 
@@ -112,21 +136,27 @@ class Manoir:
         porte_requise = directions_opposees[direction_mouvement]
         
         # 2. Filtrer la pioche
-        #    Doit avoir la porte d'entrée
-        #    Doit respecter les conditions de placement (ex: 'côté ouest') 
-        #    Doit respecter les portes extérieures (ne pas créer de porte vers le vide)
+        #     Doit avoir la porte d'entrée
+        #     Doit respecter les conditions de placement (ex: 'côté ouest') 
+        #     Doit respecter les portes extérieures (ne pas créer de porte vers le vide)
         
         pioche_filtree = [
             p for p in self.pioche 
-            if p.portes_config.get(porte_requise, False) # Vérifie si la porte requise existe
+            if p.portes.get(porte_requise, False) # Vérifie si la porte requise existe
         ]
 
         if not pioche_filtree:
             return [] # Plus de pièces valides
 
         # 3. S'assurer qu'au moins une pièce gratuite est proposée 
-        pieces_gratuites = [p for p in pioche_filtree if p.cout_gemmes == 0]
-        pieces_payantes = [p for p in pioche_filtree if p.cout_gemmes > 0]
+        # Note: Cette partie nécessite que vos objets Piece dans la Pioche aient l'attribut cout_gemmes.
+        try:
+             pieces_gratuites = [p for p in pioche_filtree if p.cout_gemmes == 0]
+             pieces_payantes = [p for p in pioche_filtree if p.cout_gemmes > 0]
+        except AttributeError:
+             # Si cout_gemmes n'existe pas, on ignore la distinction
+             pieces_gratuites = pioche_filtree
+             pieces_payantes = []
         
         candidates = []
         
@@ -138,7 +168,8 @@ class Manoir:
             candidates.append(random.choice(pieces_gratuites))
             
         # 3b. Compléter avec d'autres pièces
-        pioche_restante = pieces_payantes + pieces_gratuites
+        pioche_restante = pieces_payantes + [p for p in pieces_gratuites if p not in candidates] # Évite les doublons si possible
+        
         while len(candidates) < 3 and pioche_restante:
             choix = random.choice(pioche_restante)
             if choix not in candidates:
