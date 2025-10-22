@@ -134,7 +134,7 @@ class Jeu :
         # Dessiner les bordures de la grille
         bords_jeu = pygame.Rect(start_x_grille - 2, start_y_grille - 2, largeur_grille_seule + 4, hauteur_grille_seule + 4)
         pygame.draw.rect(self.screen, (255, 255, 255), bords_jeu, 2)
-        
+    
     
     def affichage_inventaire(self): 
         x = start_x_grille + largeur_grille_seule + espace_inventaire
@@ -160,53 +160,58 @@ class Jeu :
                 ("Dés", self.joueur.inventaire.des),]
         }
         
-        # --- Affichage des PERMANENTS (Image + Texte à Droite de l'Image) ---
-        y_permanent = y + 90
+        # --- NOUVEAU : Calcul des positions pour le positionnement côte à côte ---
+        
+        y_depart_colonnes = y +100 # On monte l'affichage car il n'y a plus de titre de section
+        largeur_colonne = largeur_inventaire // 2 # Environ 250 pixels
+        
+        # COLONNE DE GAUCHE : PERMANENTS
+        x_col_gauche = x
+        y_permanent = y_depart_colonnes
         marge_gauche = 20
-        decalage_texte_x = 50  # 40px (taille image) + 10px (marge)
+        decalage_texte_x = 50 
 
+        # --- Affichage des PERMANENTS (Colonne de Gauche) ---
         for n, q in dicto_inventaire['PERMANENT']:
             img = self.images_objets.get(n)
             
-            # 1. Affichage de l'image (à gauche)
+            # 1. Affichage de l'image
             if img:
-                self.screen.blit(img, (x + marge_gauche, y_permanent))
+                self.screen.blit(img, (x_col_gauche + marge_gauche, y_permanent))
             
-            # 2. Affichage du texte (à droite de l'image)
+            # 2. Affichage du texte
             couleur = (0, 200, 0) if q else (45,45,45)
-            # Utilisation de x + decalage_texte_x pour aligner le texte après l'image
-            self.screen.blit(self.font_petit.render(n, True, couleur), (x + decalage_texte_x + marge_gauche, y_permanent + 10)) # +10 pour centrer verticalement
+            # Utilisation de x_col_gauche
+            self.screen.blit(self.font_petit.render(n, True, couleur), (x_col_gauche + decalage_texte_x + marge_gauche, y_permanent + 10))
             
             y_permanent += 50
 
-        # --- Affichage des CONSOMMABLES (Texte et compte Alignés à Droite) ---
-        y_consommable = y + 380
+        # COLONNE DE DROITE : CONSOMMABLES
+        x_col_droite = x + largeur_colonne
+        y_consommable = y_depart_colonnes
         
-        pos_droite_inventaire = x + largeur_inventaire 
-        marge_droite = 20 
-        
-        # Largeur de l'image d'objet (40px)
+        # Largeur de l'icône et marge
         largeur_icone = 40
         marge_icone_texte = 10 
-
+        marge_droite_col = 15 # Marge droite interne à la colonne droite
+        
+        # --- Affichage des CONSOMMABLES (Colonne de Droite, Alignés à Droite) ---
         for n, q in dicto_inventaire['CONSOMMABLE']:
             img = self.images_objets.get(n)
             
-            # 1. Création du texte (Pas : 50)
+            # 1. Création du texte (Nom : Compte)
             couleur = (45,45,45)
             if n == "Pas" and q <= 10: couleur = (255, 100, 100)
             elif n == "Pas" and q > 70: couleur = (100, 255, 100)
             
-            # Le texte doit contenir le nom ET le compte (ex: "Pas : 50")
             texte_surface = self.font_petit.render(f"{n} : {q}", True, couleur)
             
-            # Calcul de la position du texte pour alignement à droite
-            # Le côté droit du texte sera collé à : bordure_droite - marge_droite
-            texte_rect = texte_surface.get_rect(right=pos_droite_inventaire - marge_droite, top=y_consommable + 10)
+            # Calcul de la position du texte pour alignement à droite de l'INVENTAIRE TOTAL
+            # Le côté droit du texte sera collé à : x + largeur_inventaire - marge_droite_col
+            texte_rect = texte_surface.get_rect(right=x + largeur_inventaire - marge_droite_col, top=y_consommable + 10)
             
             # 2. Affichage de l'icône (collée à gauche du texte)
             if img:
-                # Position X de l'icône : (Début du texte) - (Marge icône/texte) - (Largeur icône)
                 posx_img = texte_rect.left - marge_icone_texte - largeur_icone
                 self.screen.blit(img, (posx_img, y_consommable))
             
@@ -215,6 +220,9 @@ class Jeu :
                 
             y_consommable += 50
         
+        # Ligne de séparation entre les deux colonnes (supprimée)
+        # pygame.draw.line(self.screen, (200, 200, 200), (x + largeur_colonne, y_depart_colonnes - 40), (x + largeur_colonne, y_consommable - 50), 1)
+
     def affichage_curseur(self): 
         curseur_c = self.joueur.position_colonne
         curseur_r = self.joueur.position_ligne
@@ -225,12 +233,15 @@ class Jeu :
         pygame.draw.rect(self.screen, (255, 255, 0), curseur, 3) # Epaisseur 3 pour visibilité
 
     def affichage_message_statut(self):
-        """Affiche le message de statut en bas de l'inventaire."""
+        """Affiche le message de statut en bas de l'inventaire. Taille augmentée."""
         x = start_x_grille + largeur_grille_seule + espace_inventaire
-        y = start_y_grille + hauteur_grille_seule - 100 # En bas de l'inventaire
+        
+        # Hauteur du bloc de message augmentée
+        hauteur_message = 150 
+        y = start_y_grille + hauteur_grille_seule - hauteur_message # Positionne le bloc au bas de l'inventaire
         
         # Fond pour le message
-        fond_message_rect = pygame.Rect(x, y, largeur_inventaire, 100)
+        fond_message_rect = pygame.Rect(x, y, largeur_inventaire, hauteur_message)
         pygame.draw.rect(self.screen, (30, 30, 30), fond_message_rect) # Gris foncé
         
         # Texte (potentiellement sur plusieurs lignes)
@@ -240,6 +251,7 @@ class Jeu :
         
         for mot in mots:
             test_ligne = f"{ligne_actuelle} {mot}".strip()
+            # On vérifie si la ligne testée dépasse la largeur du bloc
             if self.font_petit.size(test_ligne)[0] < largeur_inventaire - 20:
                 ligne_actuelle = test_ligne
             else:
