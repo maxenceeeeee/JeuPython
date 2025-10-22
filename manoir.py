@@ -85,7 +85,7 @@ class Manoir:
                 # Correction : La porte de l'antichambre doit être niveau 2
             if pos_ligne == 0:
                     niveau = 2
-                piece_finale.portes_objets[direction] = Porte(niveau=niveau, ouverte=False)
+                    piece_finale.portes_objets[direction] = Porte(niveau=niveau, ouverte=False)
                 
     def get_piece_at(self, ligne: int, colonne: int) -> Piece | None:
         """

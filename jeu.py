@@ -2,7 +2,8 @@ import pygame
 from joueur import Joueur
 from manoir import Manoir 
 from ClassePiece import *
-# Importation de Porte pour la logique de 'deplacement'
+import zipfile
+import os
 from ClassePorte import Porte 
 
 # --- CONSTANTES D'AFFICHAGE ---
@@ -17,29 +18,49 @@ largeur_grille_seule = colonnes_jeu * nb_pixels_piece
 hauteur_grille_seule = lignes_jeu * nb_pixels_piece
 
 largeur_inventaire = 500
-espace_inventiare = 50
+espace_inventaire = 50
 
 # affichage complet jeu
-affichage_largeur = start_x_grille + largeur_grille_seule + espace_inventiare + largeur_inventaire + start_x_grille
+affichage_largeur = start_x_grille + largeur_grille_seule + espace_inventaire + largeur_inventaire + start_x_grille
 affichage_hauteur = start_y_grille * 2 + hauteur_grille_seule
 
-# Chemin relatif pour la police (plus robuste)
-try:
-    police_path = os.path.join(os.path.dirname(__file__), 'Police', 'Stay Retro PersonalUseOnly.ttf')
-    # Vérification si le fichier existe
-    if not os.path.exists(police_path):
-        # Si le chemin du Bureau était correct sur votre PC, on l'utilise en fallback
-        police_path = 'C:/Users/maxdr/OneDrive/Bureau/Police/Stay Retro PersonalUseOnly.ttf'
-        if not os.path.exists(police_path):
-            raise FileNotFoundError # Déclenche le except
-    police = police_path
-except FileNotFoundError:
-    print(f"Attention : Police non trouvée. Utilisation de la police par défaut.")
-    police = None # Pygame utilisera sa police par défaut
+def charger_images_objets():
+    # ****************************** CORRECTION ******************************
+    # Chemins simplifiés pour charger directement depuis le dossier Images_objets/
+    # Nous supposons que les images sont directement dans le dossier.
+    dossier_images = os.path.join(os.path.dirname(__file__), "Images_objets")
     
+    # Suppression de toute la logique de zip/extraction/makedirs pour la concision.
+    # Si le dossier n'existe pas ou si les fichiers manquent, le 'try/except' en bas
+    # gérera le défaut en assignant 'None'.
+    # ************************************************************************
+    
+    images = {}
+    correspondances = {
+        "Pelle": "spade.png",
+        "Kit de Crochetage": "lockpick.png",
+        "Patte de Lapin": "rabbit.png",
+        "Détecteur de Métaux": "metal-detector.png",
+        "Marteau": "hammer.png",
+        "Pas": "footstep.png",
+        "Pièces d'or": "coin.png",
+        "Gemmes": "gem.png",
+        "Clés": "key.png",
+        "Dés": "dice.png",
+    }
+    for nom, fichier in correspondances.items():
+        chemin_image = os.path.join(dossier_images, fichier)
+        try:
+            # ****************************** CONSERVATION DU TRY/EXCEPT ******************************
+            # Laisser le try/except est essentiel pour ne pas crasher si un fichier est manquant.
+            img = pygame.image.load(chemin_image).convert_alpha()
+            images[nom] = pygame.transform.scale(img, (40, 40))
+        except:
+            images[nom] = None
+    return images
 
-# --- CLASSE JEU ---
-    
+
+
 class Jeu :
     
     def __init__(self):
@@ -58,6 +79,7 @@ class Jeu :
         self.etat_jeu = "Deplacement" # États: "Deplacement", "Selection pieces", "Fin"
         self.pieces_proposees = []
         self.message_statut = "Utilisez ZQSD pour vous déplacer."
+        self.images_objets = charger_images_objets()
 
         # Ajout de variables pour mémoriser la transition
         self.nouvelle_piece_coords = None 
@@ -66,13 +88,8 @@ class Jeu :
         # Gestion des polices
         self.font_petit = pygame.font.Font(None, 30)
         self.font_moyen = pygame.font.Font(None, 35)
-        try:
-            self.font_grand = pygame.font.Font(police, 30)
-            self.font_titre = pygame.font.Font(police, 45)
-        except Exception: # Attrape FileNotFoundError ou erreur pygame si police=None
-            print(f"Utilisation de la police par défaut de Pygame.")
-            self.font_grand = pygame.font.Font(None, 40) # Fallback
-            self.font_titre = pygame.font.Font(None, 50) # Fallback
+        self.font_grand = pygame.font.Font(None, 60)
+        self.font_titre = pygame.font.Font(None, 45)
     
     # --- AFFICHAGE FIN DE PARTIE ---
     def affichage_d_v(self): 
@@ -84,7 +101,7 @@ class Jeu :
             texte = "VICTOIRE : Vous êtes arrivés à l'antichambre :)"
             affichage = self.font_titre.render(texte, True, (0, 255, 0))
         else:
-            [span_29](start_span)texte = "DEFAITE : Vous êtes à cours de pas :("[span_29](end_span)
+            texte = "DEFAITE : Vous êtes à cours de pas :("
             affichage = self.font_titre.render(texte, True, (255, 0, 0))
             
         espace_texte = affichage.get_rect(center=(affichage_largeur // 2, affichage_hauteur // 2))
@@ -106,28 +123,27 @@ class Jeu :
             for c in range(colonnes_jeu):
                 x = start_x_grille + c * nb_pixels_piece
                 y = start_y_grille + r * nb_pixels_piece
-                
+                rect = pygame.Rect(x, y, nb_pixels_piece, nb_pixels_piece)
                 piece = self.manoir.get_piece_at(r, c)
                 if piece and piece.image:
                     image_redim = pygame.transform.scale(piece.image, (nb_pixels_piece, nb_pixels_piece))
                     self.screen.blit(image_redim, (x, y))
                 elif piece: # Si la pièce existe mais l'image a échoué à charger
                      pygame.draw.rect(self.screen, (255,0,0), (x,y, nb_pixels_piece, nb_pixels_piece))
-                # else: (On laisse le fond noir)
-                
+                pygame.draw.rect(self.screen, (45, 45, 45), rect, 1)
         # Dessiner les bordures de la grille
         bords_jeu = pygame.Rect(start_x_grille - 2, start_y_grille - 2, largeur_grille_seule + 4, hauteur_grille_seule + 4)
         pygame.draw.rect(self.screen, (255, 255, 255), bords_jeu, 2)
         
-        
+    
     def affichage_inventaire(self): 
-        x = start_x_grille + largeur_grille_seule + espace_inventiare
+        x = start_x_grille + largeur_grille_seule + espace_inventaire
         y = start_y_grille
         
         inventaire_rect = pygame.Rect(x, y, largeur_inventaire, hauteur_grille_seule)
-        pygame.draw.rect(self.screen, (0, 0, 0), inventaire_rect)
+        pygame.draw.rect(self.screen, (255, 255, 255), inventaire_rect)
 
-        self.screen.blit(self.font_grand.render("Inventaire", True, (255, 255, 255)), (x+15, y+15))
+        self.screen.blit(self.font_grand.render("Inventaire", True, (45,45,45)), (x+15, y+15))
 
         dicto_inventaire = {
             'PERMANENT': [
@@ -144,22 +160,60 @@ class Jeu :
                 ("Dés", self.joueur.inventaire.des),]
         }
         
+        # --- Affichage des PERMANENTS (Image + Texte à Droite de l'Image) ---
         y_permanent = y + 90
+        marge_gauche = 20
+        decalage_texte_x = 50  # 40px (taille image) + 10px (marge)
+
         for n, q in dicto_inventaire['PERMANENT']:
-            couleur = (0, 200, 0) if q else (150, 150, 150) # Vert si possédé, gris sinon
-            self.screen.blit(self.font_petit.render(n, True, couleur), (x + 20, y_permanent))
+            img = self.images_objets.get(n)
+            
+            # 1. Affichage de l'image (à gauche)
+            if img:
+                self.screen.blit(img, (x + marge_gauche, y_permanent))
+            
+            # 2. Affichage du texte (à droite de l'image)
+            couleur = (0, 200, 0) if q else (45,45,45)
+            # Utilisation de x + decalage_texte_x pour aligner le texte après l'image
+            self.screen.blit(self.font_petit.render(n, True, couleur), (x + decalage_texte_x + marge_gauche, y_permanent + 10)) # +10 pour centrer verticalement
+            
             y_permanent += 50
 
-        y_consommable = y + 90
-        posx_ob_c = x + (largeur_inventaire // 2) + 40
-        for n, q in dicto_inventaire['CONSOMMABLE']:
-            couleur = (255, 255, 255)
-            if n == "Pas" and q <= 10: couleur = (255, 100, 100) # Rouge si peu de pas
-            elif n == "Pas" and q > 70: couleur = (100, 255, 100) # Vert si beaucoup de pas
-                
-            self.screen.blit(self.font_petit.render(f"{n} : {q}", True, couleur), (posx_ob_c, y_consommable))
-            y_consommable += 50
+        # --- Affichage des CONSOMMABLES (Texte et compte Alignés à Droite) ---
+        y_consommable = y + 380
         
+        pos_droite_inventaire = x + largeur_inventaire 
+        marge_droite = 20 
+        
+        # Largeur de l'image d'objet (40px)
+        largeur_icone = 40
+        marge_icone_texte = 10 
+
+        for n, q in dicto_inventaire['CONSOMMABLE']:
+            img = self.images_objets.get(n)
+            
+            # 1. Création du texte (Pas : 50)
+            couleur = (45,45,45)
+            if n == "Pas" and q <= 10: couleur = (255, 100, 100)
+            elif n == "Pas" and q > 70: couleur = (100, 255, 100)
+            
+            # Le texte doit contenir le nom ET le compte (ex: "Pas : 50")
+            texte_surface = self.font_petit.render(f"{n} : {q}", True, couleur)
+            
+            # Calcul de la position du texte pour alignement à droite
+            # Le côté droit du texte sera collé à : bordure_droite - marge_droite
+            texte_rect = texte_surface.get_rect(right=pos_droite_inventaire - marge_droite, top=y_consommable + 10)
+            
+            # 2. Affichage de l'icône (collée à gauche du texte)
+            if img:
+                # Position X de l'icône : (Début du texte) - (Marge icône/texte) - (Largeur icône)
+                posx_img = texte_rect.left - marge_icone_texte - largeur_icone
+                self.screen.blit(img, (posx_img, y_consommable))
+            
+            # 3. Affichage du texte
+            self.screen.blit(texte_surface, texte_rect)
+                
+            y_consommable += 50
         
     def affichage_curseur(self): 
         curseur_c = self.joueur.position_colonne
@@ -172,7 +226,7 @@ class Jeu :
 
     def affichage_message_statut(self):
         """Affiche le message de statut en bas de l'inventaire."""
-        x = start_x_grille + largeur_grille_seule + espace_inventiare
+        x = start_x_grille + largeur_grille_seule + espace_inventaire
         y = start_y_grille + hauteur_grille_seule - 100 # En bas de l'inventaire
         
         # Fond pour le message
@@ -367,10 +421,10 @@ class Jeu :
              # On ré-appelle la logique de tirage
              ligne, col = self.nouvelle_piece_coords
              self.pieces_proposees = self.manoir.tirer_trois_pieces(
-                self.joueur.position_ligne,
-                self.joueur.position_colonne,
-                ligne, col,
-                self.direction_mouvement
+                 self.joueur.position_ligne,
+                 self.joueur.position_colonne,
+                 ligne, col,
+                 self.direction_mouvement
              )
              self.message_statut = "Tirage relancé ! (1, 2, 3 ou R)"
         else:
