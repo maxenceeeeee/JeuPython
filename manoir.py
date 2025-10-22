@@ -3,7 +3,7 @@ import random
 from ClassePiece import Piece
 from ClassePorte import Porte
 from Catalogue_pieces import catalogue_pieces
-# from jeu import * # Gardez l'import si jeu est dans un fichier séparé
+from jeu import * 
 
 class Manoir:
     """
@@ -31,9 +31,11 @@ class Manoir:
         """
         pioche = []
         for data_piece in catalogue_pieces:
-            if data_piece["nom"] != "Entrance Hall" and data_piece["nom"] != "Antichambre": # <-- AJOUT
+            if data_piece["nom"] != "Entrance Hall" and data_piece["nom"] != "Antichambre":
                 # Convertit le dictionnaire en objet Piece
                 pioche.append(Piece(**data_piece))
+                # Chargement de l'image dès l'initialisation
+                pioche[-1].charger_image("Images.zip") 
         return pioche
 
     def _placer_piece_depart(self):
@@ -43,7 +45,6 @@ class Manoir:
         """
         pos_ligne, pos_col = 8, 2 # Position de départ
         
-        # Trouve les données de l'Entrance Hall
         data_entree = next((p for p in catalogue_pieces if p["nom"] == "Entrance Hall"), None)
         
         if data_entree is None:
@@ -54,9 +55,9 @@ class Manoir:
         self.grille[pos_ligne][pos_col] = piece_entree
         
         # Crée les objets Porte pour l'Entrance Hall
-        # Les portes de départ sont toujours ouvertes et niveau 0
         for direction, existe in piece_entree.portes.items():
             if existe:
+                 # Les portes de départ sont toujours ouvertes et niveau 0
                 piece_entree.portes_objets[direction] = Porte(niveau=0, ouverte=True)
 
 
@@ -65,7 +66,6 @@ class Manoir:
         Trouve l'Antichambre, la crée et la place sur la grille (0, 2).
         """
         pos_ligne, pos_col = 0, 2 
-        # Recherche robuste pour éviter l'erreur si le nom n'est pas trouvé
         data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antichambre"), None)
         if data_finale is None:
              data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antechamber"), None)
@@ -76,9 +76,15 @@ class Manoir:
         piece_finale = Piece(**data_finale)
         piece_finale.charger_image("Images.zip")
         self.grille[pos_ligne][pos_col] = piece_finale
+        
+        # Création des portes pour la pièce finale
         for direction, existe in piece_finale.portes.items():
             if existe:
+                #Niveau de verrouillage généré selon la profondeur
                 niveau = Porte.generer_niveau_verrouillage(pos_ligne, self.lignes)
+                # Correction : La porte de l'antichambre doit être niveau 2
+            if pos_ligne == 0:
+                    niveau = 2
                 piece_finale.portes_objets[direction] = Porte(niveau=niveau, ouverte=False)
                 
     def get_piece_at(self, ligne: int, colonne: int) -> Piece | None:
@@ -116,7 +122,7 @@ class Manoir:
                     porte = Porte(niveau=0, ouverte=True)
                 else:
                     # Les autres portes sont générées aléatoirement
-                    niveau = Porte.generer_niveau_verrouillage(ligne, self.lignes) #
+                    niveau = Porte.generer_niveau_verrouillage(ligne, self.lignes) 
                     porte = Porte(niveau=niveau, ouverte=False)
                 
                 piece.portes_objets[direction] = porte
@@ -129,17 +135,14 @@ class Manoir:
 
     def tirer_trois_pieces(self, ligne_actuelle: int, col_actuelle: int, ligne_nouvelle: int, col_nouvelle: int, direction_mouvement: str) -> list[Piece]:
         """
-        Tire 3 pièces candidates pour le nouvel emplacement.
+        Tire 3 pièces candidates pour le nouvel emplacement, en respectant la rareté
+        [span_9](start_span)et la règle de la pièce gratuite.[span_9](end_span)
         """
-        # 1. Définir la porte que la nouvelle pièce DOIT avoir
+        # 1.Définir la porte que la nouvelle pièce DOIT avoir
         directions_opposees = {'up': 'bas', 'down': 'haut', 'left': 'droite', 'right': 'left'}
         porte_requise = directions_opposees[direction_mouvement]
         
         # 2. Filtrer la pioche
-        #     Doit avoir la porte d'entrée
-        #     Doit respecter les conditions de placement (ex: 'côté ouest') 
-        #     Doit respecter les portes extérieures (ne pas créer de porte vers le vide)
-        
         pioche_filtree = [
             p for p in self.pioche 
             if p.portes.get(porte_requise, False) # Vérifie si la porte requise existe
@@ -148,32 +151,36 @@ class Manoir:
         if not pioche_filtree:
             return [] # Plus de pièces valides
 
-        # 3. S'assurer qu'au moins une pièce gratuite est proposée 
-        # Note: Cette partie nécessite que vos objets Piece dans la Pioche aient l'attribut cout_gemmes.
-        try:
-             pieces_gratuites = [p for p in pioche_filtree if p.cout_gemmes == 0]
-             pieces_payantes = [p for p in pioche_filtree if p.cout_gemmes > 0]
-        except AttributeError:
-             # Si cout_gemmes n'existe pas, on ignore la distinction
-             pieces_gratuites = pioche_filtree
-             pieces_payantes = []
+        # 3. Séparer gratuites et payantes pour la règle
+        pieces_gratuites = [p for p in pioche_filtree if p.cout_gemmes == 0]
+        pieces_payantes = [p for p in pioche_filtree if p.cout_gemmes > 0]
         
         candidates = []
         
-        # TODO: Implémenter la logique de rareté 
-        # Pour l'instant, on prend au hasard
-        
-        # 3a. Ajouter une pièce gratuite (si possible)
+        # 4. Gérer la rareté
+        # Poids = 1 / (3^rareté). (Rareté 0 -> poids 1, Rareté 1 -> poids 1/3, Rareté 2 -> 1/9...)
+        # Pour éviter les floats, on peut utiliser des poids relatifs (ex: 27, 9, 3, 1)
+        # Mais 1 / (3^R) est plus direct.
+        def get_poids(piece):
+            return 1 / (3**piece.rarete)
+
+        # 5. S'assurer qu'au moins une pièce gratuite est proposée
         if pieces_gratuites:
-            candidates.append(random.choice(pieces_gratuites))
-            
-        # 3b. Compléter avec d'autres pièces
-        pioche_restante = pieces_payantes + [p for p in pieces_gratuites if p not in candidates] # Évite les doublons si possible
+            poids_gratuites = [get_poids(p) for p in pieces_gratuites]
+            choix_gratuit = random.choices(pieces_gratuites, weights=poids_gratuites, k=1)[0]
+            candidates.append(choix_gratuit)
+
+        # 6. Compléter avec d'autres pièces (gratuites ou payantes)
+        pioche_restante = [p for p in pioche_filtree if p not in candidates] # Évite les doublons
         
         while len(candidates) < 3 and pioche_restante:
-            choix = random.choice(pioche_restante)
-            if choix not in candidates:
-                candidates.append(choix)
-            pioche_restante.remove(choix)
+            poids_restants = [get_poids(p) for p in pioche_restante]
             
+            # random.choices retourne une liste, on prend le premier élément [0]
+            choix = random.choices(pioche_restante, weights=poids_restants, k=1)[0]
+            
+            candidates.append(choix)
+            pioche_restante.remove(choix) # Assure l'unicité
+            
+        random.shuffle(candidates) # Mélange l'ordre d'affichage
         return candidates
