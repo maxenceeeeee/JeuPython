@@ -5,7 +5,8 @@ from ClassePorte import Porte
 from Catalogue_pieces import catalogue_pieces
 # L'import "from jeu import *" peut causer des problèmes de dépendance circulaire
 # Il vaut mieux l'éviter si possible, mais on le laisse pour l'instant car pas d'autres solution.
-from jeu import * class Manoir:
+#from jeu import * 
+class Manoir:
     """
     Gère la grille du manoir 5x9, la pioche de pièces
     et la logique de placement.
@@ -61,7 +62,7 @@ from jeu import * class Manoir:
             if existe:
                  # Les portes de départ sont toujours ouvertes et niveau 0
                 piece_entree.portes_objets[direction] = Porte(niveau=0, ouverte=True)
-
+       
 
     def _placer_piece_finale(self):
         """

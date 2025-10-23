@@ -335,13 +335,13 @@ class Jeu :
 
         piece_actuelle = self.manoir.get_piece_at(self.joueur.position_ligne, self.joueur.position_colonne)
         
+     
         # Vérification si une porte (objet) existe dans cette direction
         porte_obj = piece_actuelle.portes_objets.get(direction)
 
         if porte_obj is None:
             self.message_statut = "Il n'y a pas de porte dans cette direction."
             return
-
         # LOGIQUE D'OUVERTURE ET DE DÉPLACEMENT 
         # On tente d'ouvrir la porte (gère la dépense de clé)
         if porte_obj.ouvrir(self.joueur):
