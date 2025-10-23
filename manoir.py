@@ -3,9 +3,9 @@ import random
 from ClassePiece import Piece
 from ClassePorte import Porte
 from Catalogue_pieces import catalogue_pieces
-from jeu import * 
-
-class Manoir:
+# L'import "from jeu import *" peut causer des problèmes de dépendance circulaire
+# Il vaut mieux l'éviter si possible, mais on le laisse pour l'instant car pas d'autres solution.
+from jeu import * class Manoir:
     """
     Gère la grille du manoir 5x9, la pioche de pièces
     et la logique de placement.
@@ -55,6 +55,8 @@ class Manoir:
         self.grille[pos_ligne][pos_col] = piece_entree
         
         # Crée les objets Porte pour l'Entrance Hall
+        # Grace à notre correction dans ClassePiece, piece_entree.portes.items()
+        # est maintenant correct (ex: ('haut', True))
         for direction, existe in piece_entree.portes.items():
             if existe:
                  # Les portes de départ sont toujours ouvertes et niveau 0
@@ -82,10 +84,13 @@ class Manoir:
             if existe:
                 #Niveau de verrouillage généré selon la profondeur
                 niveau = Porte.generer_niveau_verrouillage(pos_ligne, self.lignes)
-                # Correction : La porte de l'antichambre doit être niveau 2
-            if pos_ligne == 0:
+                
+                
+                if pos_ligne == 0:
                     niveau = 2
-                    piece_finale.portes_objets[direction] = Porte(niveau=niveau, ouverte=False)
+                
+                piece_finale.portes_objets[direction] = Porte(niveau=niveau, ouverte=False)
+                
                 
     def get_piece_at(self, ligne: int, colonne: int) -> Piece | None:
         """
@@ -136,7 +141,7 @@ class Manoir:
     def tirer_trois_pieces(self, ligne_actuelle: int, col_actuelle: int, ligne_nouvelle: int, col_nouvelle: int, direction_mouvement: str) -> list[Piece]:
         """
         Tire 3 pièces candidates pour le nouvel emplacement, en respectant la rareté
-        [span_9](start_span)et la règle de la pièce gratuite.[span_9](end_span)
+        et la règle de la pièce gratuite.
         """
         # 1.Définir la porte que la nouvelle pièce DOIT avoir
         directions_opposees = {'up': 'bas', 'down': 'haut', 'left': 'droite', 'right': 'left'}
@@ -158,16 +163,19 @@ class Manoir:
         candidates = []
         
         # 4. Gérer la rareté
-        # Poids = 1 / (3^rareté). (Rareté 0 -> poids 1, Rareté 1 -> poids 1/3, Rareté 2 -> 1/9...)
-        # Pour éviter les floats, on peut utiliser des poids relatifs (ex: 27, 9, 3, 1)
-        # Mais 1 / (3^R) est plus direct.
         def get_poids(piece):
+            # Ajout d'une protection pour éviter la division par zéro si rareté est négative (peu probable)
+            # Et gestion de 3**0 = 1
+            if piece.rarete < 0: return 1.0
             return 1 / (3**piece.rarete)
 
         # 5. S'assurer qu'au moins une pièce gratuite est proposée
         if pieces_gratuites:
             poids_gratuites = [get_poids(p) for p in pieces_gratuites]
-            choix_gratuit = random.choices(pieces_gratuites, weights=poids_gratuites, k=1)[0]
+            if not any(p > 0 for p in poids_gratuites): # Au cas où tous les poids sont 0
+                choix_gratuit = random.choice(pieces_gratuites)
+            else:
+                choix_gratuit = random.choices(pieces_gratuites, weights=poids_gratuites, k=1)[0]
             candidates.append(choix_gratuit)
 
         # 6. Compléter avec d'autres pièces (gratuites ou payantes)
@@ -176,8 +184,11 @@ class Manoir:
         while len(candidates) < 3 and pioche_restante:
             poids_restants = [get_poids(p) for p in pioche_restante]
             
-            # random.choices retourne une liste, on prend le premier élément [0]
-            choix = random.choices(pioche_restante, weights=poids_restants, k=1)[0]
+            if not any(p > 0 for p in poids_restants):
+                if not pioche_restante: break # Sécurité
+                choix = random.choice(pioche_restante)
+            else:
+                choix = random.choices(pioche_restante, weights=poids_restants, k=1)[0]
             
             candidates.append(choix)
             pioche_restante.remove(choix) # Assure l'unicité
