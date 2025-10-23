@@ -10,7 +10,7 @@ from Catalogue_pieces import catalogue_pieces
 class Piece:
     """Représente une pièce du manoir, avec sa couleur, ses items et ses portes."""
 
-    def __init__(self, nom, couleur, portes, items, image, cout_gemmes=0, rarete=0): # <-- AJOUT
+    def __init__(self, nom, couleur, portes, items, image, cout_gemmes=0, rarete=0):
         """
         Initialise une pièce du manoir.
 
@@ -25,25 +25,25 @@ class Piece:
         """
         self.nom = nom
         self.couleur = couleur
-        self.portes_objets = {}
+        self.portes_objets = {} # C'est manoir.py qui va remplir ça
         self.items = items or []
         self.image_nom = image 
         self.image = None  
-        self.cout_gemmes = cout_gemmes  # <-- AJOUT
-        self.rarete = rarete            # <-- AJOUT
+        self.cout_gemmes = cout_gemmes
+        self.rarete = rarete
         
-        # Création d'un dictionnaire de portes (porte ouverte -> instance de Porte, sinon None)
-        self.portes = {
-            direction: Porte() if ouverte else None
-            for direction, ouverte in portes.items()
-        }
+        #
+        # On stocke le dictionnaire de configuration des portes (ex: {'haut': True, ...})
+        # On NE CRÉE PAS d'objets Porte() ici.
+        self.portes = portes
+        
 
     def afficher_infos(self):
         """Affiche les informations principales de la pièce."""
         print(f"Pièce : {self.nom}")
         print(f"Couleur : {self.couleur.capitalize()}")
         print(f"Items : {', '.join(self.items) if self.items else 'Aucun'}")
-        print(f"Coût : {self.cout_gemmes} gemmes, Rareté : {self.rarete}") # <-- AJOUT
+        print(f"Coût : {self.cout_gemmes} gemmes, Rareté : {self.rarete}")
         print("Portes :")
         for direction, porte in self.portes.items():
             if porte:
@@ -51,10 +51,10 @@ class Piece:
         print()
 
     def niveau_porte(self, direction: str) -> int:
-        # Correction : On utilise portes_objets qui contient les instances de Porte
+        #On utilise portes_objets qui contient les instances de Porte
         porte = self.portes_objets.get(direction)
         if porte is not None:
-            # Correction : L'attribut s'appelle 'niveau' dans ClassePorte.py
+            #L'attribut s'appelle 'niveau' dans ClassePorte.py
             return porte.niveau
         else:
             return -1
