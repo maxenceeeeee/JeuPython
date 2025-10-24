@@ -145,7 +145,7 @@ class Manoir:
         et la règle de la pièce gratuite.
         """
         # 1.Définir la porte que la nouvelle pièce DOIT avoir
-        directions_opposees = {'up': 'bas', 'down': 'haut', 'left': 'droite', 'right': 'left'}
+        directions_opposees = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}        
         porte_requise = directions_opposees[direction_mouvement]
         
         # 2. Filtrer la pioche

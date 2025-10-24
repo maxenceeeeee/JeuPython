@@ -1,6 +1,7 @@
 import pygame 
 from joueur import Joueur
 from manoir import Manoir 
+from inventaire import * 
 from ClassePiece import *
 import zipfile
 import os
@@ -100,8 +101,11 @@ class Jeu :
         if self.victoire == True:
             texte = "VICTOIRE : Vous êtes arrivés à l'antichambre :)"
             affichage = self.font_titre.render(texte, True, (0, 255, 0))
-        else:
+        elif self.joueur.inventaire.pas <= 0:
             texte = "DEFAITE : Vous êtes à cours de pas :("
+            affichage = self.font_titre.render(texte, True, (255, 0, 0))
+        elif self.game_over: 
+            texte = "DEFAITE : La partie est terminée :("
             affichage = self.font_titre.render(texte, True, (255, 0, 0))
             
         espace_texte = affichage.get_rect(center=(affichage_largeur // 2, affichage_hauteur // 2))
@@ -515,7 +519,7 @@ class Jeu :
                 
                 if self.etat_jeu == "Selection pieces":
                     self.affichage_selection_pieces() # Affichage du choix
-                
+            
             
             pygame.display.flip()
             self.clock.tick(60) # 60 FPS
