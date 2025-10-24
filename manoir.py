@@ -32,7 +32,7 @@ class Manoir:
         """
         pioche = []
         for data_piece in catalogue_pieces:
-            if data_piece["nom"] != "Entrance Hall" and data_piece["nom"] != "Antichambre":
+            if data_piece["nom"] != "Entrance Hall" and data_piece["nom"] != "Antechamber":
                 # Convertit le dictionnaire en objet Piece
                 pioche.append(Piece(**data_piece))
                 # Chargement de l'image dès l'initialisation
@@ -47,10 +47,6 @@ class Manoir:
         pos_ligne, pos_col = 8, 2 # Position de départ
         
         data_entree = next((p for p in catalogue_pieces if p["nom"] == "Entrance Hall"), None)
-        
-        if data_entree is None:
-            raise ValueError("Erreur : 'Entrance Hall' non trouvée dans le catalogue.")
-
         piece_entree = Piece(**data_entree)
         piece_entree.charger_image("Images.zip")
         self.grille[pos_ligne][pos_col] = piece_entree
@@ -69,13 +65,7 @@ class Manoir:
         Trouve l'Antichambre, la crée et la place sur la grille (0, 2).
         """
         pos_ligne, pos_col = 0, 2 
-        data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antichambre"), None)
-        if data_finale is None:
-             data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antechamber"), None)
-        
-        if data_finale is None:
-             raise ValueError("Erreur : Les données de l'Antichambre (nom 'Antichambre' ou 'Antechamber') n'ont pas été trouvées dans 'Catalogue_pieces.py'.")
-
+        data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antechamber"), None)
         piece_finale = Piece(**data_finale)
         piece_finale.charger_image("Images.zip")
         self.grille[pos_ligne][pos_col] = piece_finale

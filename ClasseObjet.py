@@ -59,7 +59,7 @@ class Pomme(Nourriture):
 
 class Banane(Nourriture):
     def __init__(self):
-        super().__init__("Banane", 5, 1)
+        super().__init__("Banane", 5, 1)    
 
 class Gateau(Nourriture):
     def __init__(self):

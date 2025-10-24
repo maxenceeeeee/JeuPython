@@ -3,9 +3,11 @@ from joueur import Joueur
 from manoir import Manoir 
 from inventaire import * 
 from ClassePiece import *
+from ClasseObjet import *
 import zipfile
 import os
 from ClassePorte import Porte 
+
 
 # --- CONSTANTES D'AFFICHAGE ---
 colonnes_jeu = 5
@@ -393,43 +395,42 @@ class Jeu :
 
 
     def selectionner_piece(self, index_choix: int):
-        """Logique appelée quand le joueur appuie sur 1, 2 ou 3."""
-        
+        """Logique appelée quand le joueur appuie sur 1, 2 ou 3.
+        Place la pièce choisie, déplace le joueur et gère le ramassage des items.
+        """
         if not (0 <= index_choix < len(self.pieces_proposees)):
-            return # Touche invalide
+            return 
 
         piece_choisie = self.pieces_proposees[index_choix]
         cout = piece_choisie.cout_gemmes
 
-        #Tenter de dépenser les gemmes
-        if self.joueur.inventaire.depenser_gemmes(cout):
-            # Assez de gemmes
+        if self.joueur.inventaire.depenser_gemmes(piece_choisie.cout_gemmes):
             ligne, col = self.nouvelle_piece_coords
-            
-            # Placer la pièce dans le manoir
             self.manoir.placer_piece(
-                piece_choisie,
-                ligne, col,
+                piece_choisie, ligne, col,
                 self.joueur.position_ligne, self.joueur.position_colonne,
                 self.direction_mouvement
             )
-            
-            # Déplacer le joueur
+
             if self.joueur.deplacer_vers(ligne, col):
                 self.message_statut = f"Vous avez découvert : {piece_choisie.nom}"
-                # TODO: Ramasser les items de la pièce
+
+                piece_dans_catalogue = next((p for p in catalogue_pieces if p["nom"] == piece_choisie.nom), None)
+                if piece_dans_catalogue and piece_dans_catalogue["items"]:
+                    nom_item = random.choice(piece_dans_catalogue["items"])
+                    self.joueur.inventaire.ramasser_nom_objet(nom_item)
+                    self.message_statut += f" | Vous trouvez : {nom_item}"
+                else:
+                    self.message_statut += " | Aucun objet ici."
             else:
-                self.game_over = True # Ne devrait pas arriver ici, mais sécurité
-            
-            # Réinitialiser
+                self.game_over = True
+
             self.etat_jeu = "Deplacement"
             self.pieces_proposees = []
             self.nouvelle_piece_coords = None
             self.direction_mouvement = None
-            
         else:
-            # Pas assez de gemmes
-            self.message_statut = f"Pas assez de gemmes ! (Requis: {cout})"
+            self.message_statut = f"Pas assez de gemmes ! (Requis : {piece_choisie.cout_gemmes})"
 
     def utiliser_de(self):
         """Relance le tirage des pièces si le joueur a un dé."""

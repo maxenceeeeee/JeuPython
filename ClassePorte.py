@@ -3,6 +3,7 @@ import random
 # On a besoin de la classe Joueur pour le type hint, mais cela crée une dépendance circulaire
 # On va utiliser un 'forward reference' (string) ou l'enlever.
 from joueur import Joueur 
+from inventaire import *
 
 class Porte:
     """ Une porte entre deux pièces du manoir."""
@@ -26,52 +27,35 @@ class Porte:
         return False
 
     def ouvrir(self, joueur) -> bool:
-        """
-        Tente d'ouvrir la porte. 
-        Retourne True si l'ouverture réussit (et dépense les clés si nécessaire).
-        Retourne False si l'ouverture échoue.
-        """
-        if self.ouverte:
-            return True # Déjà ouverte
-            
+        if self.ouverte == True:
+            return True
         if not self.peut_ouvrir(joueur):
-            return False # Ne peut pas ouvrir
-
-        # Si on peut ouvrir, on gère la dépense de clé
-        if self.niveau == 1 and not joueur.inventaire.a_objet_permanent("Kit de Crochetage"):
-            joueur.inventaire.depenser_cles(1) 
-        elif self.niveau == 2:
-            joueur.inventaire.depenser_cles(1) 
+            return False
         
+        if self.niveau == 2:
+            if not joueur.inventaire.depenser_cles(1):
+                return False
+        if self.niveau == 1:
+            if not joueur.inventaire.a_objet_permanent("Kit de Crochetage"):
+                if not joueur.inventaire.depenser_cles(1):
+                    return False    
         self.ouverte = True
         return True
 
     @staticmethod
     def generer_niveau_verrouillage(ligne: int, hauteur_grille: int) -> int:
-        """
-        Renvoie un niveau (0-2) selon la profondeur dans le manoir.
-        La ligne 0 est le haut (Antichambre), la ligne 8 (hauteur_grille - 1) est le bas (Entrée).
-        """
-        # Ligne de départ (en bas) : toujours niveau 0
-        # Note : ligne == 8 (si hauteur == 9)
         if ligne == hauteur_grille - 1:
             return 0    
-        
-        # Ligne d'arrivée (en haut) : toujours niveau 2
-        # Note : ligne == 0
         if ligne == 0:
             return 2
         
-        # Entre les deux, la probabilité augmente en montant.
-        # Plus 'ligne' est petit (proche de 0), plus c'est difficile.
+        progression = (hauteur_grille - 1 - ligne) / (hauteur_grille - 2.0) 
         
-        progression = (hauteur_grille - 1 - ligne) / (hauteur_grille - 2.0) # Va de ~0.14 à 1.0
+        proba = random.random()
         
-        proba = random.random() # 0.0 à 1.0
-        
-        if proba < (progression * 0.3): # Probabilité de Niv 2 (augmente vite)
+        if proba < (progression * 0.3): 
             return 2
-        elif proba < (progression * 0.7): # Probabilité de Niv 1
+        elif proba < (progression * 0.7):
             return 1
         else:
-            return 0 # Reste (Niv 0)
+            return 0

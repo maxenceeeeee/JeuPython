@@ -9,7 +9,7 @@ catalogue_pieces = [
         "nom": "Entrance Hall",
         "couleur": "bleue",
         "portes": {"up": True, "down": False, "left": True, "right": True}, # Corrigé
-        "items": ["lettre", "plan", "allowance token"],
+        "items": ["Lettre", "Plan", "Allowance token"],
         "image" : "Images/entrancehall.webp",
         "cout_gemmes": 0, "rarete": 0 
     },
@@ -17,7 +17,7 @@ catalogue_pieces = [
         "nom": "The Foundation",
         "couleur": "grise",
         "portes": {"up": True, "down": True, "left": False, "right": False}, # Corrigé
-        "items": ["pierre ancienne", "blueprint part"],
+        "items": ["Pierre ancienne", "Blueprint part"],
         "image" : "Images/foundation.webp",
         "cout_gemmes": 0, "rarete": 1
     },
@@ -25,7 +25,7 @@ catalogue_pieces = [
         "nom": "Nook",
         "couleur": "bleue",
         "portes": {"up": False, "down": False, "left": True, "right": True}, # Corrigé
-        "items": ["clé", "note noire", "livre"],
+        "items": ["Clé", "Note noire", "Livre"],
         "image" : "Images/nook.webp",
         "cout_gemmes": 0, "rarete": 0
     },
@@ -33,7 +33,7 @@ catalogue_pieces = [
         "nom": "Garage",
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": True, "right": False}, # Corrigé
-        "items": ["voiture", "clé", "coffre dans le coffre"],
+        "items": ["Voiture", "Clé", "Coffre dans le coffre"],
         "image" : "Images/garage.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -41,7 +41,7 @@ catalogue_pieces = [
         "nom": "Music Room",
         "couleur": "bleue",
         "portes": {"up": False, "down": False, "left": True, "right": True}, # Corrigé
-        "items": ["partitions", "clé spéciale"],
+        "items": ["Partitions", "Clé spéciale"],
         "image" : "Images/musicroom.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -49,7 +49,7 @@ catalogue_pieces = [
         "nom": "Locker Room",
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": True, "right": False}, # Corrigé
-        "items": ["casiers", "clé", "pièces"],
+        "items": ["Casiers", "Clé", "Pièces"],
         "image" : "Images/lockerroom.webp",
         "cout_gemmes": 0, "rarete": 0
     },
@@ -57,7 +57,7 @@ catalogue_pieces = [
         "nom": "Den",
         "couleur": "bleue",
         "portes": {"up": True, "down": True, "left": False, "right": False}, # Corrigé
-        "items": ["gemme", "coffre verrouillé"],
+        "items": ["Gemme", "Coffre verrouillé"],
         "image" : "Images/den.webp",
         "cout_gemmes": 2, "rarete": 2 
     },
@@ -65,7 +65,7 @@ catalogue_pieces = [
         "nom": "Wine Cellar",
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": False, "right": True}, # Corrigé
-        "items": ["bouteilles", "gemmes"],
+        "items": ["Bouteilles", "Gemmes"],
         "image" : "Images/winecellar.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -73,7 +73,7 @@ catalogue_pieces = [
         "nom": "Trophy Room",
         "couleur": "dorée", 
         "portes": {"up": False, "down": False, "left": True, "right": True}, # Corrigé
-        "items": ["trophées", "gemmes"],
+        "items": ["Trophées", "Gemmes"],
         "image" : "Images/trophyroom.webp",
         "cout_gemmes": 2, "rarete": 2
     },
@@ -81,7 +81,7 @@ catalogue_pieces = [
         "nom": "Ballroom",
         "couleur": "blanche",
         "portes": {"up": True, "down": False, "left": False, "right": True}, # Corrigé
-        "items": ["lustre", "partition", "clé de scène"],
+        "items": ["Lustre", "Partition", "Clé de scène"],
         "image" : "Images/ballroom.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -89,7 +89,7 @@ catalogue_pieces = [
         "nom": "Pantry",
         "couleur": "verte", 
         "portes": {"up": False, "down": False, "left": True, "right": True}, # Corrigé
-        "items": ["fruit", "pièces"],
+        "items": ["Fruit", "Pièces"],
         "image" : "Images/pantry.webp",
         "cout_gemmes": 0, "rarete": 0 
     },
@@ -97,7 +97,7 @@ catalogue_pieces = [
         "nom": "Rumpus Room",
         "couleur": "bleue",
         "portes": {"up": True, "down": False, "left": True, "right": False}, # Corrigé
-        "items": ["machine Alzara", "pièces"],
+        "items": ["Machine Alzara", "Pièces"],
         "image" : "Images/rumpusroom.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -105,7 +105,7 @@ catalogue_pieces = [
         "nom": "Observatory",
         "couleur": "violette", 
         "portes": {"up": True, "down": False, "left": True, "right": True}, # Corrigé
-        "items": ["télescope", "constellation map"],
+        "items": ["Télescope", "Constellation map"],
         "image" : "Images/observatory.webp",
         "cout_gemmes": 2, "rarete": 2
     },
@@ -113,7 +113,7 @@ catalogue_pieces = [
         "nom": "Library",
         "couleur": "brune",
         "portes": {"up": True, "down": False, "left": True, "right": True}, # Corrigé
-        "items": ["livres", "note de recherche"],
+        "items": ["Livres", "Note de recherche"],
         "image" : "Images/library.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -121,7 +121,7 @@ catalogue_pieces = [
         "nom": "Vault",
         "couleur": "dorée",
         "portes": {"up": False, "down": False, "left": True, "right": False}, # Corrigé
-        "items": ["coffre-fort", "gemmes", "clés"],
+        "items": ["Coffre-fort", "Gemmes", "Clés"],
         "image" : "Images/vault.webp",
         "cout_gemmes": 3, "rarete": 3 
     },

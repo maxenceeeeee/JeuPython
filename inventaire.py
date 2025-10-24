@@ -26,7 +26,6 @@ class Inventaire:
             "Kit de Crochetage": False, 
             "Détecteur de Métaux": False, 
             "Patte de Lapin": False,   
-            # Objets créatifs (à intégrer dans la logique de jeu) :
             "Loupe de l'Architecte": False, 
             "Pièce Faux-Fonds": False,
             "Bracelet de Résistance": False,
@@ -83,28 +82,25 @@ class Inventaire:
 
     # --- 4. LOGIQUE DE RAMASSAGE D'OBJET (Point de connexion avec les classes Objet) ---
 
-    # NOTE: Cette méthode dépend de la classe 'Objet' que vous avez créée.
-    def ramasser_objet(self, objet, joueur):
-        """
-        Fonction appelée quand le joueur trouve un objet. 
-        Elle transfère la responsabilité à l'objet lui-même via objet.utiliser(joueur).
-        """
-        
-        if objet.type_objet == "Permanent":
-            if not self.a_objet_permanent(objet.nom):
-                # 1. On applique l'effet (qui est juste une notification pour les permanents)
-                objet.utiliser(joueur) 
-                # 2. On marque l'objet comme possédé dans notre dictionnaire de statut
-                self.objets_permanents[objet.nom] = True 
-                return True # Objet ramassé avec succès
-            else:
-                print(f"Vous possédez déjà cet objet permanent: {objet.nom}.")
-                return False # L'objet n'est pas ramassé
-        
-        elif objet.type_objet == "Consommable":
-            # La méthode utiliser() des consommables met à jour les chiffres (pas, clés, etc.)
-            # et retourne True car l'objet est consommé/utilisé sur le champ.
-            est_consomme = objet.utiliser(joueur)
-            return est_consomme
+    def ramasser_nom_objet(self, nom_item: str):
+        if nom_item in self.objets_permanents:
+            self.objets_permanents[nom_item] = True
+            print(f"Objet permanent obtenu : {nom_item}")
+            return True
 
-        return False # Échec générique
+        if nom_item == "Pas":
+            self.pas += 10
+        elif nom_item == "Pièces d'or":
+            self.pieces_or += 1
+        elif nom_item == "Gemmes":
+            self.gemmes += 1
+        elif nom_item == "Clés":
+            self.cles += 1
+        elif nom_item == "Dés":
+            self.des += 1
+        else:
+            print(f"Objet inconnu : {nom_item}")
+            return False
+
+        print(f"Objet consommable ramassé : {nom_item}")
+        return True
