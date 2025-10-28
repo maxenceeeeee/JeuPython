@@ -1,0 +1,16 @@
+#Installations à faire
+#Dans le terminal installer pygame : 
+pip install pygame
+
+
+#Bibliothèques à utiliser
+
+import pygame 
+from joueur import Joueur
+from manoir import Manoir 
+from inventaire import * 
+from ClassePiece import *
+from ClasseObjet import *
+import zipfile
+import os
+from ClassePorte import Porte 
