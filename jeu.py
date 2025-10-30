@@ -164,63 +164,43 @@ class Jeu :
                 ("Dé", self.joueur.inventaire.des),] 
         }
         
-        # Calcul des positions pour le positionnement côte à côte
+        y_depart_colonnes = y + 100 
+        largeur_colonne = largeur_inventaire // 2 
         
-        y_depart_colonnes = y +100 # On monte l'affichage car il n'y a plus de titre de section
-        largeur_colonne = largeur_inventaire // 2 # Environ 250 pixels
-        
-        # COLONNE DE GAUCHE : PERMANENTS
         x_col_gauche = x
         y_permanent = y_depart_colonnes
         marge_gauche = 20
         decalage_texte_x = 50 
 
-        # Affichage des PERMANENTS (Colonne de Gauche)
         for n, q in dicto_inventaire['PERMANENT']:
-            img = self.images_objets.get(n)
-            
-            # 1. Affichage de l'image
-            if img:
-                self.screen.blit(img, (x_col_gauche + marge_gauche, y_permanent))
-            
-            # 2. Affichage du texte
-            couleur = (0, 200, 0) if q else (45,45,45)
-            # Utilisation de x_col_gauche
-            self.screen.blit(self.font_petit.render(n, True, couleur), (x_col_gauche + decalage_texte_x + marge_gauche, y_permanent + 10))
-            
-            y_permanent += 50
-
-        # COLONNE DE DROITE : CONSOMMABLES
+            if q: 
+                img = self.images_objets.get(n)
+                
+                if img:
+                    self.screen.blit(img, (x_col_gauche + marge_gauche, y_permanent))
+                couleur = (0, 200, 0)
+                self.screen.blit(self.font_petit.render(n, True, couleur), (x_col_gauche + decalage_texte_x + marge_gauche, y_permanent + 10))
+                y_permanent += 5
         x_col_droite = x + largeur_colonne
         y_consommable = y_depart_colonnes
-        
-        # Largeur de l'icône et marge
         largeur_icone = 40
         marge_icone_texte = 10 
-        marge_droite_col = 15 # Marge droite interne à la colonne droite
-        
-        #Affichage des CONSOMMABLES (Colonne de Droite, Alignés à Droite)
+        marge_droite_col = 15
         for n, q in dicto_inventaire['CONSOMMABLE']:
             img = self.images_objets.get(n)
-            
-            # 1. Création du texte (Nom : Compte)
-            couleur = (45,45,45)
-            if n == "Pas" and q <= 10: couleur = (255, 100, 100)
-            elif n == "Pas" and q > 70: couleur = (100, 255, 100)
-            
-            texte_surface = self.font_petit.render(f"{n} : {q}", True, couleur)
-            
-            # Calcul de la position du texte pour alignement à droite de l'INVENTAIRE TOTAL
-            # Le côté droit du texte sera collé à : x + largeur_inventaire - marge_droite_col
-            texte_rect = texte_surface.get_rect(right=x + largeur_inventaire - marge_droite_col, top=y_consommable + 10)
-            
-            # 2. Affichage de l'icône (collée à gauche du texte)
+            couleur_texte = (45,45,45)
+            if n == "Pas" and q <= 10: couleur_texte = (255, 100, 100) # Rouge si Pas faibles
+            elif n == "Pas" and q > 70: couleur_texte = (100, 255, 100) # Vert si Pas élevés
+            texte_quantite = self.font_petit.render(f"x{q}", True, couleur_texte)
+            largeur_texte = texte_quantite.get_width()
+            largeur_bloc = largeur_icone + marge_icone_texte + largeur_texte
+            x_depart_bloc = x_col_droite + (largeur_colonne - largeur_bloc) // 2 
             if img:
-                posx_img = texte_rect.left - marge_icone_texte - largeur_icone
+                posx_img = x_depart_bloc
                 self.screen.blit(img, (posx_img, y_consommable))
             
-            # 3. Affichage du texte
-            self.screen.blit(texte_surface, texte_rect)
+            posx_texte = x_depart_bloc + largeur_icone + marge_icone_texte
+            self.screen.blit(texte_quantite, (posx_texte, y_consommable + 10))
                 
             y_consommable += 50
         
@@ -311,13 +291,15 @@ class Jeu :
                 self.screen.blit(img_scaled, (x_carte + 20, y_carte + 110))
 
             # Coût Gemmes
-            cout_txt = f"Coût : {piece.cout_gemmes} Gemme(s)"
-            couleur_cout = (0, 255, 255)
-            if piece.cout_gemmes > self.joueur.inventaire.gemmes:
-                couleur_cout = (255, 0, 0) # Rouge si pas assez
-            elif piece.cout_gemmes == 0:
-                 couleur_cout = (0, 255, 0) # Vert si gratuit
-                 
+            if piece.cout_gemmes == 0:
+                cout_txt = "Gratuit"
+                couleur_cout = (0, 255, 0)
+            else:
+                cout_txt = f"Coût : {piece.cout_gemmes} Gemme(s)"
+                couleur_cout = (0, 255, 255)
+                if piece.cout_gemmes > self.joueur.inventaire.gemmes:
+                    couleur_cout = (255, 0, 0) # Rouge si pas assez
+                    
             cout_surface = self.font_petit.render(cout_txt, True, couleur_cout)
             cout_rect = cout_surface.get_rect(center=(x_carte + 100, y_carte + 280))
             self.screen.blit(cout_surface, cout_rect)
@@ -608,7 +590,6 @@ class Jeu :
             self.message_statut = "Vous n'avez pas de Dés !"
 
 
-    #GESTION DES EVENEMENTS
     def gestion_evenements(self):
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -616,42 +597,38 @@ class Jeu :
             
             if event.type == pygame.KEYDOWN :
                 
-                # Etat "Fin de partie
                 if self.etat_jeu == "Fin":
                     if event.key == pygame.K_RETURN:
                         self.flag_en_cours = False
                 
-                # Etat "Déplacement
                 elif self.etat_jeu == "Deplacement":
-                    if event.key == pygame.K_z: # ZQSD
+                    if event.key == pygame.K_z:
                         self.deplacement('up')
-                    elif event.key == pygame.K_q :
+                    elif event.key == pygame.K_a:
                         self.deplacement('left')
                     elif event.key == pygame.K_s :
                         self.deplacement('down')
                     elif event.key == pygame.K_d :
                         self.deplacement('right')
                 
-                # Etat "Sélection de pièces"
                 elif self.etat_jeu == "Selection pieces":
-                    if event.key == pygame.K_1 or event.key == pygame.K_KP_1: # Touche 1
+                    if event.key == pygame.K_1 or event.key == pygame.K_KP_1:
                         self.selectionner_piece(0)
-                    elif event.key == pygame.K_2 or event.key == pygame.K_KP_2: # Touche 2
+                    elif event.key == pygame.K_2 or event.key == pygame.K_KP_2:
                         self.selectionner_piece(1)
-                    elif event.key == pygame.K_3 or event.key == pygame.K_KP_3: # Touche 3
+                    elif event.key == pygame.K_3 or event.key == pygame.K_KP_3:
                         self.selectionner_piece(2)
-                    elif event.key == pygame.K_r: # 'R' pour Relancer (Dé)
+                    elif event.key == pygame.K_r:
                         self.utiliser_de()
                         
-                # Etat "Magasin"
                 elif self.etat_jeu == "Magasin":
-                    if event.key == pygame.K_1 or event.key == pygame.K_KP_1: # Touche 1
+                    if event.key == pygame.K_1 or event.key == pygame.K_KP_1:
                         self._acheter_objet(0)
-                    elif event.key == pygame.K_2 or event.key == pygame.K_KP_2: # Touche 2
+                    elif event.key == pygame.K_2 or event.key == pygame.K_KP_2:
                         self._acheter_objet(1)
-                    elif event.key == pygame.K_3 or event.key == pygame.K_KP_3: # Touche 3
+                    elif event.key == pygame.K_3 or event.key == pygame.K_KP_3:
                         self._acheter_objet(2)
-                    elif event.key == pygame.K_q: # 'Q' pour Quitter
+                    elif event.key == pygame.K_q:
                         self.etat_jeu = "Deplacement"
                         self.message_statut = "Vous quittez la boutique."
 
