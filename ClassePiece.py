@@ -81,33 +81,8 @@ class Piece:
             self.image.blit(text, text_rect)
             return
 
-        try:
-            with ZipFile(zip_path_complet, "r") as archive:
-                try:
-                    with archive.open(self.image_nom) as file:
-                        file_bytes = BytesIO(file.read())
-                        file_bytes.seek(0) 
-                        self.image = pygame.image.load(file_bytes).convert_alpha()
-                except KeyError:
-                    print(f"Image {self.image_nom} non trouvée dans {zip_path}.")
-                    # Créer une image de remplacement
-                    self.image = pygame.Surface((80, 80))
-                    self.image.fill((200, 200, 0)) # Jaune pour image non trouvée
-                    font = pygame.font.Font(None, 15)
-                    text_lines = self.image_nom.split('/')
-                    y = 25
-                    for line in text_lines:
-                        text = font.render(line, True, (0, 0, 0))
-                        text_rect = text.get_rect(center=(40, y))
-                        self.image.blit(text, text_rect)
-                        y += 15
-                        
-        except FileNotFoundError:
-             print(f"Fichier ZIP {zip_path_complet} non trouvé.")
-             # Idem, image de remplacement
-             self.image = pygame.Surface((80, 80))
-             self.image.fill((128, 0, 128))
-             font = pygame.font.Font(None, 20)
-             text = font.render("NO ZIP", True, (255, 255, 255))
-             text_rect = text.get_rect(center=(40, 40))
-             self.image.blit(text, text_rect)
+        with ZipFile(zip_path_complet, "r") as archive:
+                with archive.open(self.image_nom) as file:
+                    file_bytes = BytesIO(file.read())
+                    file_bytes.seek(0) 
+                    self.image = pygame.image.load(file_bytes).convert_alpha()
