@@ -52,8 +52,7 @@ class Manoir:
         self.grille[pos_ligne][pos_col] = piece_entree
         
         # Crée les objets Porte pour l'Entrance Hall
-        # Grace à notre correction dans ClassePiece, piece_entree.portes.items()
-        # est maintenant correct (ex: ('haut', True))
+        
         for direction, existe in piece_entree.portes.items():
             if existe:
                  # Les portes de départ sont toujours ouvertes et niveau 0
@@ -107,12 +106,15 @@ class Manoir:
             self.pioche.remove(piece)
             
         # 3. Définir la direction d'où l'on vient (pour la nouvelle pièce)
-        directions_opposees = {'up': 'bas', 'down': 'haut', 'left': 'droite', 'right': 'left'}
-        porte_entree_nom = directions_opposees[direction_mouvement]
+        
+        directions_opposees = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}
+        
+        porte_entree_nom = directions_opposees[direction_mouvement] # ex: 'up' -> 'down'
 
         # 4. Créer les objets Porte pour la nouvelle pièce
         for direction, existe in piece.portes.items():
             if existe:
+                # On vérifie si la porte actuelle (ex: 'down') est la porte d'entrée
                 if direction == porte_entree_nom:
                     # La porte par laquelle on entre est ouverte et niveau 0
                     porte = Porte(niveau=0, ouverte=True)
@@ -134,6 +136,7 @@ class Manoir:
         Tire 3 pièces candidates pour le nouvel emplacement, en respectant la rareté
         et la règle de la pièce gratuite.
         """
+        
         # 1.Définir la porte que la nouvelle pièce DOIT avoir
         directions_opposees = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}        
         porte_requise = directions_opposees[direction_mouvement]

@@ -10,7 +10,7 @@ from Catalogue_pieces import catalogue_pieces
 class Piece:
     """Représente une pièce du manoir, avec sa couleur, ses items et ses portes."""
 
-    def __init__(self, nom, couleur, portes, items, image, cout_gemmes=0, rarete=0):
+    def __init__(self, nom, couleur, portes, loot, image, cout_gemmes=0, rarete=0): # 'items' est devenu 'loot'
         """
         Initialise une pièce du manoir.
 
@@ -18,7 +18,7 @@ class Piece:
             nom (str): Nom de la pièce.
             couleur (str): Couleur principale de la pièce (ex: 'bleue', 'dorée', etc.).
             portes (dict): Dictionnaire indiquant les directions et si une porte est présente (True/False).
-            items (list): Liste des objets présents dans la pièce.
+            loot (dict): Dictionnaire de butin (garanti, aleatoire) et boutique.
             image (str): Nom du fichier image.
             cout_gemmes (int): Coût en gemmes pour choisir cette pièce. 
             rarete (int): Rareté de la pièce (0-3).
@@ -26,7 +26,7 @@ class Piece:
         self.nom = nom
         self.couleur = couleur
         self.portes_objets = {} # C'est manoir.py qui va remplir ça
-        self.items = items or []
+        self.loot = loot or {}  
         self.image_nom = image 
         self.image = None  
         self.cout_gemmes = cout_gemmes
@@ -37,12 +37,15 @@ class Piece:
         # On NE CRÉE PAS d'objets Porte() ici.
         self.portes = portes
         
+        
+        # On stocke aussi les données de la boutique (peut être None)
+        self.magasin = self.loot.get("magasin", None)
 
     def afficher_infos(self):
         """Affiche les informations principales de la pièce."""
         print(f"Pièce : {self.nom}")
         print(f"Couleur : {self.couleur.capitalize()}")
-        print(f"Items : {', '.join(self.items) if self.items else 'Aucun'}")
+        print(f"Loot : {self.loot}")
         print(f"Coût : {self.cout_gemmes} gemmes, Rareté : {self.rarete}")
         print("Portes :")
         for direction, porte in self.portes.items():

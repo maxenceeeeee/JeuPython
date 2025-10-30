@@ -7,9 +7,10 @@ from ClasseObjet import *
 import zipfile
 import os
 from ClassePorte import Porte 
+from ClasseObjet import OBJET_MAP
 
 
-# --- CONSTANTES D'AFFICHAGE ---
+# CONSTANTES D'AFFICHAGE 
 colonnes_jeu = 5
 lignes_jeu = 9 
 
@@ -28,15 +29,10 @@ affichage_largeur = start_x_grille + largeur_grille_seule + espace_inventaire + 
 affichage_hauteur = start_y_grille * 2 + hauteur_grille_seule
 
 def charger_images_objets():
-    # ****************************** CORRECTION ******************************
-    # Chemins simplifiés pour charger directement depuis le dossier Images_objets/
-    # Nous supposons que les images sont directement dans le dossier.
+    
     dossier_images = os.path.join(os.path.dirname(__file__), "Images_objets")
     
-    # Suppression de toute la logique de zip/extraction/makedirs pour la concision.
-    # Si le dossier n'existe pas ou si les fichiers manquent, le 'try/except' en bas
-    # gérera le défaut en assignant 'None'.
-    # ************************************************************************
+   
     
     images = {}
     correspondances = {
@@ -46,15 +42,14 @@ def charger_images_objets():
         "Détecteur de Métaux": "metal-detector.png",
         "Marteau": "hammer.png",
         "Pas": "footstep.png",
-        "Pièces d'or": "coin.png",
-        "Gemmes": "gem.png",
-        "Clés": "key.png",
-        "Dés": "dice.png",
+        "Pièce d'Or": "coin.png", # Pièces d'or -> Pièce d'Or
+        "Gemme": "gem.png", # Gemmes -> Gemme
+        "Clé": "key.png", # Clés -> Clé
+        "Dé": "dice.png", # Dés -> Dé
     }
     for nom, fichier in correspondances.items():
         chemin_image = os.path.join(dossier_images, fichier)
         try:
-            # ****************************** CONSERVATION DU TRY/EXCEPT ******************************
             # Laisser le try/except est essentiel pour ne pas crasher si un fichier est manquant.
             img = pygame.image.load(chemin_image).convert_alpha()
             images[nom] = pygame.transform.scale(img, (40, 40))
@@ -79,7 +74,7 @@ class Jeu :
         self.game_over = False
         self.victoire = False
         
-        self.etat_jeu = "Deplacement" # États: "Deplacement", "Selection pieces", "Fin"
+        self.etat_jeu = "Deplacement" # États: "Deplacement", "Selection pieces", "Magasin", "Fin"
         self.pieces_proposees = []
         self.message_statut = "Utilisez ZQSD pour vous déplacer."
         self.images_objets = charger_images_objets()
@@ -87,6 +82,9 @@ class Jeu :
         # Ajout de variables pour mémoriser la transition
         self.nouvelle_piece_coords = None 
         self.direction_mouvement = None
+        
+        # Variables pour le Magasin
+        self.magasin_items = [] # Les objets en vente (ex: {"item": "Clé", "prix": 10})
 
         # Gestion des polices
         self.font_petit = pygame.font.Font(None, 30)
@@ -94,7 +92,7 @@ class Jeu :
         self.font_grand = pygame.font.Font(None, 60)
         self.font_titre = pygame.font.Font(None, 45)
     
-    # --- AFFICHAGE FIN DE PARTIE ---
+    # AFFICHAGE FIN DE PARTIE
     def affichage_d_v(self): 
         fenetre_fin = pygame.Surface((affichage_largeur, affichage_hauteur), pygame.SRCALPHA)
         fenetre_fin.fill((0, 0, 0, 220)) 
@@ -117,7 +115,7 @@ class Jeu :
         instruction_rect = instruction_surface.get_rect(center=(affichage_largeur // 2, affichage_hauteur // 2 + 50))
         self.screen.blit(instruction_surface, instruction_rect)
 
-    # --- AFFICHAGE JEU ---
+    #AFFICHAGE JEU
     def affichage_grille(self):
         self.screen.fill((168,195,188)) # Fond général
         
@@ -160,13 +158,13 @@ class Jeu :
                 ("Détecteur de Métaux", self.joueur.inventaire.a_objet_permanent("Détecteur de Métaux")),],
             'CONSOMMABLE': [
                 ("Pas", self.joueur.inventaire.pas),
-                ("Pièces d'or", self.joueur.inventaire.pieces_or),
-                ("Gemmes", self.joueur.inventaire.gemmes),
-                ("Clés", self.joueur.inventaire.cles),
-                ("Dés", self.joueur.inventaire.des),]
+                ("Pièce d'Or", self.joueur.inventaire.pieces_or), 
+                ("Gemme", self.joueur.inventaire.gemmes), 
+                ("Clé", self.joueur.inventaire.cles), 
+                ("Dé", self.joueur.inventaire.des),] 
         }
         
-        # --- NOUVEAU : Calcul des positions pour le positionnement côte à côte ---
+        # Calcul des positions pour le positionnement côte à côte
         
         y_depart_colonnes = y +100 # On monte l'affichage car il n'y a plus de titre de section
         largeur_colonne = largeur_inventaire // 2 # Environ 250 pixels
@@ -177,7 +175,7 @@ class Jeu :
         marge_gauche = 20
         decalage_texte_x = 50 
 
-        # --- Affichage des PERMANENTS (Colonne de Gauche) ---
+        # Affichage des PERMANENTS (Colonne de Gauche)
         for n, q in dicto_inventaire['PERMANENT']:
             img = self.images_objets.get(n)
             
@@ -201,7 +199,7 @@ class Jeu :
         marge_icone_texte = 10 
         marge_droite_col = 15 # Marge droite interne à la colonne droite
         
-        # --- Affichage des CONSOMMABLES (Colonne de Droite, Alignés à Droite) ---
+        #Affichage des CONSOMMABLES (Colonne de Droite, Alignés à Droite)
         for n, q in dicto_inventaire['CONSOMMABLE']:
             img = self.images_objets.get(n)
             
@@ -226,9 +224,6 @@ class Jeu :
                 
             y_consommable += 50
         
-        # Ligne de séparation entre les deux colonnes (supprimée)
-        # pygame.draw.line(self.screen, (200, 200, 200), (x + largeur_colonne, y_depart_colonnes - 40), (x + largeur_colonne, y_consommable - 50), 1)
-
     def affichage_curseur(self): 
         curseur_c = self.joueur.position_colonne
         curseur_r = self.joueur.position_ligne
@@ -326,12 +321,174 @@ class Jeu :
             cout_surface = self.font_petit.render(cout_txt, True, couleur_cout)
             cout_rect = cout_surface.get_rect(center=(x_carte + 100, y_carte + 280))
             self.screen.blit(cout_surface, cout_rect)
+            
+    # AFFICHAGE MAGASIN
+    def affichage_magasin(self):
+        """Affiche l'écran de la boutique."""
+        # 1. Fond semi-transparent
+        overlay = pygame.Surface((affichage_largeur, affichage_hauteur), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 200))
+        self.screen.blit(overlay, (0, 0))
 
-    # --- LOGIQUE DE JEU ---
+        # 2. Titre
+        titre_surface = self.font_titre.render("BOUTIQUE", True, (255, 215, 0)) # Doré
+        titre_rect = titre_surface.get_rect(center=(affichage_largeur // 2, 100))
+        self.screen.blit(titre_surface, titre_rect)
+        
+        # Info
+        info_surface = self.font_moyen.render("Appuyez sur 'Q' pour quitter", True, (255, 255, 255))
+        info_rect = info_surface.get_rect(center=(affichage_largeur // 2, 150))
+        self.screen.blit(info_surface, info_rect)
+
+        # 3. Affichage des objets en vente
+        nb_choix = len(self.magasin_items)
+        largeur_totale_cartes = nb_choix * 200 + (nb_choix - 1) * 50
+        start_x = (affichage_largeur - largeur_totale_cartes) // 2
+        y_carte = affichage_hauteur // 2 - 100
+
+        for i, item_data in enumerate(self.magasin_items):
+            item_nom = item_data["item"]
+            item_prix = item_data["prix"]
+            
+            x_carte = start_x + i * (200 + 50)
+            carte_rect = pygame.Rect(x_carte, y_carte, 200, 300)
+            
+            pygame.draw.rect(self.screen, (50, 50, 50), carte_rect) # Fond gris
+            pygame.draw.rect(self.screen, (255, 215, 0), carte_rect, 2) # Bordure dorée
+
+            # Touche (1, 2, 3)
+            touche_surface = self.font_grand.render(f"Touche {i+1}", True, (255, 255, 0))
+            touche_rect = touche_surface.get_rect(center=(x_carte + 100, y_carte + 40))
+            self.screen.blit(touche_surface, touche_rect)
+
+            # Nom de l'objet
+            nom_surface = self.font_moyen.render(item_nom, True, (255, 255, 255))
+            nom_rect = nom_surface.get_rect(center=(x_carte + 100, y_carte + 100))
+            self.screen.blit(nom_surface, nom_rect)
+            
+            # Image de l'objet
+            img = self.images_objets.get(item_nom)
+            if img:
+                 img_scaled = pygame.transform.scale(img, (80, 80))
+                 img_rect = img_scaled.get_rect(center=(x_carte + 100, y_carte + 170))
+                 self.screen.blit(img_scaled, img_rect)
+
+            # Prix
+            cout_txt = f"Prix : {item_prix} Or"
+            couleur_cout = (0, 255, 255) # Cyan
+            if item_prix > self.joueur.inventaire.pieces_or:
+                couleur_cout = (255, 0, 0) # Rouge si pas assez
+                 
+            cout_surface = self.font_petit.render(cout_txt, True, couleur_cout)
+            cout_rect = cout_surface.get_rect(center=(x_carte + 100, y_carte + 250))
+            self.screen.blit(cout_surface, cout_rect)
+
+    # LOGIQUE DE JEU
+    
+    def _instancier_objet(self, nom_item: str):
+        """Crée une instance d'objet à partir de son nom, via le MAP."""
+        classe_objet = OBJET_MAP.get(nom_item)
+        if classe_objet:
+            return classe_objet() # Crée une instance, ex: Cle()
+        else:
+            print(f"Avertissement: Objet '{nom_item}' non trouvé dans OBJET_MAP.")
+            return None
+
+    def _generer_et_ramasser_butin(self, piece: Piece):
+        """
+        Génère le butin de la pièce (selon la couleur et la table de loot)
+        et l'ajoute à l'inventaire du joueur.
+        """
+        objets_trouves = [] # Noms (str) des objets trouvés
+        
+        # 1. Récupérer la définition du loot depuis le catalogue
+        loot_data = piece.loot
+        if not loot_data:
+            self.message_statut += " | Aucun objet ici."
+            return
+
+        # 2. Traiter le loot garanti
+        for nom_item in loot_data.get("garanti", []):
+            objets_trouves.append(nom_item)
+            
+        # 3. Traiter le loot aléatoire
+        for nom_item, proba in loot_data.get("aleatoire", []):
+            if random.random() < proba: # random() donne un float entre 0.0 et 1.0
+                objets_trouves.append(nom_item)
+                
+        # 4. Traiter le loot basé sur la COULEUR 
+        if piece.couleur == "verte": # Jardins
+            if random.random() < 0.2: # 20% chance de gemme en plus
+                objets_trouves.append("Gemme")
+        
+        elif piece.couleur == "violette": # Chambres
+             if random.random() < 0.3: # 30% chance de pomme en plus (gain de pas)
+                objets_trouves.append("Pomme")
+        
+        # 5. Si aucun objet n'a été trouvé
+        if not objets_trouves:
+            self.message_statut += " | Aucun objet ici."
+            return
+
+        # 6. Instancier et ramasser les objets
+        message_loot = " | Vous trouvez : "
+        items_str_list = []
+        
+        for nom_item in objets_trouves:
+            objet_instance = self._instancier_objet(nom_item)
+            if objet_instance:
+                # La méthode ramasser_objet gère l'ajout (permanent ou consommable)
+                self.joueur.inventaire.ramasser_objet(objet_instance, self.joueur)
+                items_str_list.append(nom_item)
+        
+        self.message_statut += message_loot + ", ".join(items_str_list)
+
+    def _entrer_magasin(self, piece: Piece):
+        """Prépare et passe le jeu en état Magasin."""
+        if piece.magasin:
+            self.magasin_items = piece.magasin
+            self.etat_jeu = "Magasin"
+            self.message_statut = "Boutique ! (1, 2, 3) pour acheter. (Q) pour quitter."
+        else:
+            print(f"Avertissement: Pièce dorée '{piece.nom}' n'a pas de 'magasin' défini.")
+
+    def _acheter_objet(self, index_choix: int):
+        """Logique d'achat d'un objet dans la boutique."""
+        if not (0 <= index_choix < len(self.magasin_items)):
+            return # Touche invalide
+
+        item_data = self.magasin_items[index_choix]
+        nom_item = item_data["item"]
+        prix = item_data["prix"]
+        
+        # 1. Vérifier si le joueur a assez d'or
+        if self.joueur.inventaire.depenser_pieces_or(prix):
+            # 2. Si oui, instancier l'objet
+            objet_instance = self._instancier_objet(nom_item)
+            if objet_instance:
+                # 3. Ramasser l'objet
+                self.joueur.inventaire.ramasser_objet(objet_instance, self.joueur)
+                self.message_statut = f"Achat réussi : {nom_item} pour {prix} Or."
+                
+                # Optionnel : Retirer l'objet du magasin (stock limité)
+                # self.magasin_items.pop(index_choix) 
+            else:
+                # Rembourser si l'objet n'existe pas (bogue ?)
+                self.joueur.inventaire.pieces_or += prix
+                self.message_statut = f"Erreur: Objet {nom_item} inconnu."
+        else:
+            # 4. Pas assez d'argent
+            self.message_statut = f"Pas assez d'Or ! (Requis: {prix})"
+
+
     def deplacement(self, direction):
-        if self.etat_jeu != "Deplacement":
+        if self.etat_jeu not in ["Deplacement", "Magasin"]: # On peut pas bouger si on choisit une pièce
             self.message_statut = "Veuillez choisir une pièce (Touches 1, 2, 3)"
             return
+        # Si on est dans un magasin et on bouge, on quitte le magasin
+        if self.etat_jeu == "Magasin":
+            self.etat_jeu = "Deplacement"
+            self.message_statut = "Vous quittez la boutique."
 
         nouvelle_ligne, nouvelle_colonne = self.joueur.calcul_coordonnees_casead(direction)
 
@@ -362,6 +519,9 @@ class Jeu :
                     # Vérifier si c'est l'antichambre (victoire)
                     if destination_piece.nom in ["Antechamber", "Antichambre"]:
                         self.victoire = True
+                    # GESTION BOUTIQUE SI ON RE-ENTRE
+                    elif destination_piece.couleur == "dorée":
+                        self._entrer_magasin(destination_piece)
                 else:
                     # Plus de pas
                     self.game_over = True
@@ -414,14 +574,14 @@ class Jeu :
 
             if self.joueur.deplacer_vers(ligne, col):
                 self.message_statut = f"Vous avez découvert : {piece_choisie.nom}"
+                
+                
+                self._generer_et_ramasser_butin(piece_choisie)
+                
+                
+                if piece_choisie.couleur == "dorée":
+                    self._entrer_magasin(piece_choisie)
 
-                piece_dans_catalogue = next((p for p in catalogue_pieces if p["nom"] == piece_choisie.nom), None)
-                if piece_dans_catalogue and piece_dans_catalogue["items"]:
-                    nom_item = random.choice(piece_dans_catalogue["items"])
-                    self.joueur.inventaire.ramasser_nom_objet(nom_item)
-                    self.message_statut += f" | Vous trouvez : {nom_item}"
-                else:
-                    self.message_statut += " | Aucun objet ici."
             else:
                 self.game_over = True
 
@@ -448,7 +608,7 @@ class Jeu :
             self.message_statut = "Vous n'avez pas de Dés !"
 
 
-    # --- GESTION DES EVENEMENTS ---
+    #GESTION DES EVENEMENTS
     def gestion_evenements(self):
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -456,12 +616,12 @@ class Jeu :
             
             if event.type == pygame.KEYDOWN :
                 
-                # --- État "Fin de partie" ---
+                # Etat "Fin de partie
                 if self.etat_jeu == "Fin":
                     if event.key == pygame.K_RETURN:
                         self.flag_en_cours = False
                 
-                # --- État "Déplacement" ---
+                # Etat "Déplacement
                 elif self.etat_jeu == "Deplacement":
                     if event.key == pygame.K_z: # ZQSD
                         self.deplacement('up')
@@ -472,7 +632,7 @@ class Jeu :
                     elif event.key == pygame.K_d :
                         self.deplacement('right')
                 
-                # --- État "Sélection de pièces" ---
+                # Etat "Sélection de pièces"
                 elif self.etat_jeu == "Selection pieces":
                     if event.key == pygame.K_1 or event.key == pygame.K_KP_1: # Touche 1
                         self.selectionner_piece(0)
@@ -482,6 +642,18 @@ class Jeu :
                         self.selectionner_piece(2)
                     elif event.key == pygame.K_r: # 'R' pour Relancer (Dé)
                         self.utiliser_de()
+                        
+                # Etat "Magasin"
+                elif self.etat_jeu == "Magasin":
+                    if event.key == pygame.K_1 or event.key == pygame.K_KP_1: # Touche 1
+                        self._acheter_objet(0)
+                    elif event.key == pygame.K_2 or event.key == pygame.K_KP_2: # Touche 2
+                        self._acheter_objet(1)
+                    elif event.key == pygame.K_3 or event.key == pygame.K_KP_3: # Touche 3
+                        self._acheter_objet(2)
+                    elif event.key == pygame.K_q: # 'Q' pour Quitter
+                        self.etat_jeu = "Deplacement"
+                        self.message_statut = "Vous quittez la boutique."
 
                 
     def verification_fin_jeu(self):
@@ -495,7 +667,7 @@ class Jeu :
             self.game_over = True
             self.etat_jeu = "Fin"
             
-    # --- BOUCLE PRINCIPALE ---
+    # BOUCLE PRINCIPALE
     def en_cours_gestion(self):
         while self.flag_en_cours == True:
             # 1. Gérer les inputs
@@ -512,7 +684,7 @@ class Jeu :
                 self.affichage_curseur()
                 self.affichage_d_v()
                 
-            else: # "Deplacement" ou "Selection pieces"
+            else: # "Deplacement", "Selection pieces", ou "Magasin"
                 self.affichage_grille()
                 self.affichage_inventaire()
                 self.affichage_curseur()
@@ -520,6 +692,9 @@ class Jeu :
                 
                 if self.etat_jeu == "Selection pieces":
                     self.affichage_selection_pieces() # Affichage du choix
+                
+                elif self.etat_jeu == "Magasin":
+                    self.affichage_magasin() # Affichage de la boutique
             
             
             pygame.display.flip()

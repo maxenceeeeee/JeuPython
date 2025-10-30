@@ -51,7 +51,7 @@ class Nourriture(ObjetConsommable):
         """Augmente les pas du joueur et consomme l'objet."""
         joueur.inventaire.pas += self.pas_rendus
         print(f"{self.nom} consommé : +{self.pas_rendus} pas.")
-        return True 
+        return True # L'objet est consommé
 
 class Pomme(Nourriture):
     def __init__(self):
@@ -73,15 +73,24 @@ class Ressource(ObjetConsommable):
 
     def utiliser(self, joueur):
         """Ajoute la ressource correspondante à l'inventaire et consomme l'objet."""
-        attribut_inventaire = self.nom.lower().replace(' ', '_').replace('é', 'e') + 's' 
         
-        if hasattr(joueur.inventaire, attribut_inventaire):
-            setattr(joueur.inventaire, attribut_inventaire, getattr(joueur.inventaire, attribut_inventaire) + 1)
-            print(f"Ramassé : +1 {self.nom}.")
-            return True
+        
+        # Au lieu de 'attribut_inventaire', on utilise une correspondance directe
+        
+        if self.nom == "Clé":
+            joueur.inventaire.cles += 1
+        elif self.nom == "Pièce d'Or":
+            joueur.inventaire.pieces_or += 1
+        elif self.nom == "Gemme":
+            joueur.inventaire.gemmes += 1
+        elif self.nom == "Dé":
+            joueur.inventaire.des += 1
         else:
-            print(f"Erreur: L'inventaire ne supporte pas la ressource {self.nom}.")
+            print(f"Erreur: La ressource {self.nom} n'est pas gérée.")
             return False
+            
+        print(f"Ramassé : +1 {self.nom}.")
+        return True # L'objet est consommé
 
 class Cle(Ressource):
     def __init__(self):
@@ -107,7 +116,7 @@ class SceauSecurite(ObjetConsommable):
 
     def utiliser(self, joueur):
         """Déclenche la logique de 'figer' une pièce pendant le tirage."""
-        # La logique réelle d'application se fera dans la classe Jeu
+        # La logique réelle d'application se fera dans la classe Jeu normalement
         print(f"Utilisation du {self.nom}. Le prochain tirage de pièces sera 'scellé' après le premier choix.")
         return True # L'objet est consommé
 
@@ -118,7 +127,7 @@ class PotionTeleportation(ObjetConsommable):
 
     def utiliser(self, joueur):
         """Déclenche la logique de sélection de pièce sur la grille."""
-        # La logique de sélection de la destination doit être gérée par la classe "Jeu"
+        # La logique de sélection de la destination doit être gérée par la classe "Jeu" normalement
         print(f"Utilisation de la {self.nom}. Veuillez choisir une pièce de destination sur la grille.")
         return True # L'objet est consommé
 
@@ -131,6 +140,7 @@ class ObjetPermanent(Objet):
 
     def utiliser(self, joueur):
         """Les objets permanents ne sont pas 'consommés' après avoir été ramassés."""
+        # L'ajout à l'inventaire se fait dans inventaire.py/ramasser_objet
         print(f"Objet permanent ramassé : {self.nom}. Son effet est actif.")
         return False # L'objet n'est PAS consommé/retiré de l'inventaire après usage
 
@@ -153,3 +163,32 @@ class LoupeArchitecte(ObjetPermanent):
 class PieceFauxFonds(ObjetPermanent):
     def __init__(self):
         super().__init__("Pièce Faux-Fonds", "Chance (10%) de ne pas dépenser une Pièce d'Or lors de l'achat dans un magasin.", 1)
+
+
+# ITEM FACTORY
+# Dictionnaire qui mappe les noms (str) aux classes (class)
+OBJET_MAP = {
+    # Nourriture
+    "Pomme": Pomme,
+    "Banane": Banane,
+    "Gâteau": Gateau,
+    
+    # Ressources
+    "Clé": Cle,
+    "Pièce d'Or": PieceDor,
+    "Gemme": Gemme,
+    "Dé": De,
+    
+    # Objets Spéciaux
+    "Sceau de Sécurité": SceauSecurite,
+    "Potion de Téléportation": PotionTeleportation,
+    
+    # Objets Permanents
+    "Pelle": Pelle,
+    "Kit de Crochetage": KitDeCrochetage,
+    "Patte de Lapin": PatteDeLapin,
+    "Loupe de l'Architecte": LoupeArchitecte,
+    "Pièce Faux-Fonds": PieceFauxFonds,
+    
+    # Pas d'idées créatives de nouveaux objets
+}
