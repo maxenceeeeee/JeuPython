@@ -2,7 +2,7 @@
 import random
 # On a besoin de la classe Joueur pour le type hint, mais cela crée une dépendance circulaire
 # On va utiliser un 'forward reference' (string) ou l'enlever.
-from joueur import Joueur 
+from joueur import * 
 from inventaire import *
 
 class Porte:
@@ -29,16 +29,26 @@ class Porte:
     def ouvrir(self, joueur) -> bool:
         if self.ouverte == True:
             return True
+        
         if not self.peut_ouvrir(joueur):
             return False
         
         if self.niveau == 2:
-            if not joueur.inventaire.depenser_cles(1):
-                return False
+            if joueur.inventaire.depenser_cles(1):
+                self.ouverte = True
+                return True
+            return False
+        
         if self.niveau == 1:
-            if not joueur.inventaire.a_objet_permanent("Kit de Crochetage"):
-                if not joueur.inventaire.depenser_cles(1):
-                    return False    
+            if joueur.inventaire.a_objet_permanent("Kit de Crochetage"):
+                self.ouverte = True
+                return True
+            else:
+                if joueur.inventaire.depenser_cles(1):
+                    self.ouverte = True
+                    return True
+                return False
+                
         self.ouverte = True
         return True
 

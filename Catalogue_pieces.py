@@ -34,7 +34,7 @@ catalogue_pieces = [
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": True, "right": False},
         "loot": {
-            "garanti": [],
+            "garanti": ["Clé"],
             "aleatoire": [("Clé", 0.5), ("Pièce d'Or", 1.0)] # 50% Clé, 100% Pièce
         },
         "image" : "Images/nook.webp",
@@ -44,7 +44,8 @@ catalogue_pieces = [
         "nom": "Garage",
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": False, "right": False},
-        "loot": { "garanti": [], "aleatoire": [("Clé", 0.2)] },
+        "loot": { "garanti": ["Clé", "Clé", "Clé"], 
+                 "aleatoire": [("Clé", 0.2)] },
         "image" : "Images/garage.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -60,7 +61,7 @@ catalogue_pieces = [
         "nom": "Locker Room",
         "couleur": "bleue",
         "portes": {"up": True, "down": True, "left": False, "right": False},
-        "loot": { "garanti": ["Pièce d'Or"], "aleatoire": [("Clé", 0.1)] },
+        "loot": { "garanti": ["Pièce d'Or", "Clé"], "aleatoire": [("Clé", 0.1)] },
         "image" : "Images/lockerroom.webp",
         "cout_gemmes": 0, "rarete": 0
     },
@@ -76,7 +77,7 @@ catalogue_pieces = [
         "nom": "Wine Cellar",
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": False, "right": False},
-        "loot": { "garanti": [], "aleatoire": [("Gemme", 0.1)] },
+        "loot": { "garanti": ["Gemme", "Gemme", "Gemme"], "aleatoire": [("Gemme", 0.1)] },
         "image" : "Images/winecellar.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -85,7 +86,7 @@ catalogue_pieces = [
         "couleur": "dorée", # C'est une boutique 
         "portes": {"up": False, "down": True, "left": True, "right": False},
         "loot": {
-            "garanti": ["Pièce d'Or", "Pièce d'Or"], # On trouve 2 pièces en entrant
+            "garanti": ["Gemme", "Gemme", "Gemme", "Gemme", "Gemme", "Gemme", "Gemme", "Gemme"], # On trouve 2 pièces en entrant
             "aleatoire": [],
             "magasin": [
                 {"item": "Clé", "prix": 5},
@@ -100,7 +101,7 @@ catalogue_pieces = [
         "nom": "Ballroom",
         "couleur": "blanche",
         "portes": {"up": True, "down": True, "left": False, "right": False},
-        "loot": { "garanti": [], "aleatoire": [("Pièce d'Or", 0.3)] },
+        "loot": { "garanti": ["Gemme"], "aleatoire": [("Pièce d'Or", 0.3)] },
         "image" : "Images/ballroom.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -109,7 +110,7 @@ catalogue_pieces = [
         "couleur": "verte", # Pièce verte
         "portes": {"up": False, "down": False, "left": True, "right": True},
         "loot": { 
-            "garanti": ["Pomme"], # Garanti une pomme
+            "garanti": ["Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or"], # Garanti une pomme
             "aleatoire": [("Banane", 0.3)] # Chance d'une banane
         },
         "image" : "Images/pantry.webp",
@@ -119,7 +120,7 @@ catalogue_pieces = [
         "nom": "Rumpus Room",
         "couleur": "bleue",
         "portes": {"up": True, "down": True, "left": False, "right": False},
-        "loot": { "garanti": [], "aleatoire": [("Pièce d'Or", 0.5)] },
+        "loot": { "garanti": ["Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or"], "aleatoire": [("Pièce d'Or", 0.5)] },
         "image" : "Images/rumpusroom.webp",
         "cout_gemmes": 1, "rarete": 1
     },
@@ -147,7 +148,7 @@ catalogue_pieces = [
         "couleur": "dorée", # C'est une boutique 
         "portes": {"up": False, "down": True, "left": False, "right": False},
         "loot": {
-            "garanti": ["Gemme"], # Garanti une gemme en entrant
+            "garanti": ["Pièce d'Or"] * 40, # Garanti une gemme en entrant
             "aleatoire": [],
             "magasin": [
                 {"item": "Pelle", "prix": 30},

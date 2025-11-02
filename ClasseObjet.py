@@ -66,31 +66,25 @@ class Gateau(Nourriture):
         super().__init__("Gâteau", 12, 2)
 
 class Ressource(ObjetConsommable):
-    """Classe de base pour les ressources (Clé, Gemme, Pièce d'Or, Dé)."""
-    def __init__(self, nom: str, rarete: int):
-        description = f"Ajoute 1 {nom} à l'inventaire."
+    def __init__(self, nom : str, rarete : int, quantite : int = 1): 
+        description = f"{quantite} {nom}(s) ajouté(s) à l'inventaire."
         super().__init__(nom, description, rarete)
+        self.quantite = quantite
 
     def utiliser(self, joueur):
-        """Ajoute la ressource correspondante à l'inventaire et consomme l'objet."""
-        
-        
-        # Au lieu de 'attribut_inventaire', on utilise une correspondance directe
-        
         if self.nom == "Clé":
-            joueur.inventaire.cles += 1
+            joueur.inventaire.cles += self.quantite
         elif self.nom == "Pièce d'Or":
-            joueur.inventaire.pieces_or += 1
+            joueur.inventaire.pieces_or += self.quantite 
         elif self.nom == "Gemme":
-            joueur.inventaire.gemmes += 1
+            joueur.inventaire.gemmes += self.quantite
         elif self.nom == "Dé":
-            joueur.inventaire.des += 1
+            joueur.inventaire.des += self.quantite
         else:
-            print(f"Erreur: La ressource {self.nom} n'est pas gérée.")
             return False
             
-        print(f"Ramassé : +1 {self.nom}.")
-        return True # L'objet est consommé
+        print(f"Ramassé : +{self.quantite} {self.nom}.")
+        return True
 
 class Cle(Ressource):
     def __init__(self):
@@ -101,8 +95,8 @@ class PieceDor(Ressource):
         super().__init__("Pièce d'Or", 0)
         
 class Gemme(Ressource):
-    def __init__(self):
-        super().__init__("Gemme", 2)
+    def __init__(self, quantite : int = 1):
+        super().__init__("Gemme", 2, quantite)
         
 class De(Ressource):
     def __init__(self):
@@ -190,5 +184,4 @@ OBJET_MAP = {
     "Loupe de l'Architecte": LoupeArchitecte,
     "Pièce Faux-Fonds": PieceFauxFonds,
     
-    # Pas d'idées créatives de nouveaux objets
 }
