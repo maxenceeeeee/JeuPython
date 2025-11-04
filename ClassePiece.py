@@ -72,52 +72,60 @@ class Piece:
         """Vérifie si on peut creuser dans cette pièce."""
         return self.endroits_creuser > 0 and not self.endroit_creuse
 
-    def creuser(self) -> dict:
-        """
-        Tente de creuser dans la pièce. Retourne un dictionnaire avec:
-        - 'success': True si creusage réussi et objet trouvé, False si échec
-        - 'objet': nom de l'objet trouvé (si success=True)
-        - 'message': message à afficher
-        """
-        if not self.peut_creuser():
-            return {'success': False, 'message': "Aucun endroit où creuser ici ou déjà creusé."}
-        
-        # Marquer comme creusé
-        self.endroit_creuse = True
-        
-        # Déterminer si on trouve quelque chose (60% de chance de succès)
-        if random.random() < 0.6:
-            # Table de loot pour le creusage
-            loot_possibles = [
-                ("Pièce d'Or", 0.3),
-                ("Clé", 0.25), 
-                ("Gemme", 0.2),
-                ("Pomme", 0.1),
-                ("Banane", 0.08),
-                ("Gâteau", 0.05),
-                ("Dé", 0.02)
-            ]
+    def creuser(self, patte_lapin_active: bool) -> dict:
+            """
+            Tente de creuser dans la pièce. Retourne un dictionnaire avec:
+            - 'success': True si creusage réussi et objet trouvé, False si échec
+            - 'objet': nom de l'objet trouvé (si success=True)
+            - 'message': message à afficher
+            """
+            if not self.peut_creuser():
+                return {'success': False, 'message': "Aucun endroit où creuser ici ou déjà creusé."}
             
-            # Tirer un objet au sort selon les probabilités
-            objet_trouve = None
-            r = random.random()
-            cumul = 0
-            for objet, proba in loot_possibles:
-                cumul += proba
-                if r <= cumul:
-                    objet_trouve = objet
-                    break
+            # Marquer comme creusé
+            self.endroit_creuse = True
             
-            return {
-                'success': True, 
-                'objet': objet_trouve,
-                'message': f"Vous creusez et trouvez : {objet_trouve} !"
-            }
-        else:
-            return {
-                'success': False,
-                'message': "Vous creusez mais ne trouvez rien..."
-            }
+            chance_base = 0.6
+            if patte_lapin_active:
+                chance_base = min(1.0, chance_base + 0.2) # Augmente la chance de succès de 20% max 100%
+
+            # Déterminer si on trouve quelque chose
+            if random.random() < chance_base:
+                # Table de loot pour le creusage
+                loot_possibles = [
+                    ("Pièce d'Or", 0.3),
+                    ("Clé", 0.25), 
+                    ("Gemme", 0.2),
+                    ("Pomme", 0.1),
+                    ("Banane", 0.08),
+                    ("Gâteau", 0.05),
+                    ("Dé", 0.02)
+                ]
+                
+                # Tirer un objet au sort selon les probabilités
+                objet_trouve = None
+                r = random.random()
+                cumul = 0
+                for objet, proba in loot_possibles:
+                    cumul += proba
+                    if r <= cumul:
+                        objet_trouve = objet
+                        break
+                
+                # S'assurer de toujours trouver quelque chose si succès
+                if objet_trouve is None:
+                    objet_trouve = "Pièce d'Or" 
+
+                return {
+                    'success': True, 
+                    'objet': objet_trouve,
+                    'message': f"Vous creusez et trouvez : {objet_trouve} !"
+                }
+            else:
+                return {
+                    'success': False,
+                    'message': "Vous creusez mais ne trouvez rien..."
+                }
         
     def charger_image(self, zip_path="Images.zip"):
         """

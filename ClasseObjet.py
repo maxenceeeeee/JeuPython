@@ -111,7 +111,6 @@ class De(Ressource):
     def __init__(self):
         super().__init__("Dé", 1)  # Peu commun
 
-
 class ObjetPermanent(Objet):
     """Classe de base pour tous les objets permanents."""
     def __init__(self, nom: str, description: str, rarete: int):
@@ -119,63 +118,58 @@ class ObjetPermanent(Objet):
 
     def utiliser(self, joueur):
         """
-        Les objets permanents sont consommés après utilisation.
-        Retourne True pour indiquer qu'ils doivent être retirés de l'inventaire.
+        Les objets permanents NE SONT PAS consommés après utilisation.
+        Retourne False pour indiquer qu'ils DOIVENT rester dans l'inventaire.
         """
-        print(f"Objet permanent utilisé : {self.nom}. Effet actif.")
-        return True  # L'objet EST consommé/retiré de l'inventaire
+        print(f"Objet permanent activé : {self.nom}. Effet actif.")
+        return False  # L'objet N'EST PAS consommé/retiré de l'inventaire
 
 class Pelle(ObjetPermanent):
     def __init__(self):
-        super().__init__("Pelle", "Permet de creuser une fois dans des endroits spécifiques, permettant de trouver certains objets.", 2)
+        super().__init__("Pelle", "Permet de creuser une fois dans des endroits spécifiques.", 2)
 
     def utiliser(self, joueur):
-        """Utilise la pelle pour creuser une fois, puis elle disparaît"""
-        print("Pelle utilisée - elle va disparaître")
-        # La logique de creusage est gérée dans jeu.py
-        return True  # Disparaît après utilisation
+        """La pelle est utilisée pour creuser (l'objet reste)."""
+        print("Pelle disponible pour creuser.")
+        return False  # Reste dans l'inventaire
 
 class Marteau(ObjetPermanent):
     def __init__(self):
-        super().__init__("Marteau", "Permet de briser les cadenas des coffres une fois, permettant de les ouvrir sans dépenser de clé.", 2)
+        super().__init__("Marteau", "Permet de briser les cadenas des coffres sans dépenser de clé.", 2)
 
     def utiliser(self, joueur):
-        """Utilise le marteau une fois, puis il disparaît"""
-        print("Marteau utilisé - il va disparaître")
-        # La logique d'ouverture des coffres est gérée dans jeu.py
-        return True  # Disparaît après utilisation
+        """Le marteau est utilisé pour ouvrir des coffres (l'objet reste)."""
+        print("Marteau disponible pour ouvrir les coffres.")
+        return False  # Reste dans l'inventaire
 
 class KitDeCrochetage(ObjetPermanent):
     def __init__(self):
-        super().__init__("Kit de Crochetage", "Permet d'ouvrir une porte verrouillée de niveau 1, puis disparaît.", 2)
+        super().__init__("Kit de Crochetage", "Permet d'ouvrir une porte verrouillée de niveau 1 sans dépenser de clé.", 2)
 
     def utiliser(self, joueur):
-        """Utilise le kit pour ouvrir une porte, puis il disparaît"""
-        print("Kit de crochetage utilisé - il va disparaître")
-        # La logique d'ouverture des portes est gérée dans jeu.py
-        return True  # Disparaît après utilisation
+        """Le kit est utilisé pour ouvrir des portes niveau 1 (l'objet reste)."""
+        print("Kit de crochetage disponible pour ouvrir les portes Niv 1.")
+        return False  # Reste dans l'inventaire
         
 class DetecteurMetaux(ObjetPermanent):
     def __init__(self):
-        super().__init__("Détecteur de Métaux", "Augmente la chance de trouver des clés et des pièces pendant un temps limité, puis disparaît.", 2)
+        super().__init__("Détecteur de Métaux", "Augmente la chance de trouver des clés et des pièces.", 2)
 
     def utiliser(self, joueur):
-        """Active le détecteur pour une durée limitée, puis il disparaît"""
-        print("Détecteur de métaux activé - il va disparaître après effet")
-        # Implémentez ici la logique d'augmentation des chances
-        # Par exemple, on pourrait set un flag temporaire dans le joueur
-        return True  # Disparaît après utilisation
+        """Active l'effet permanent (l'objet reste)."""
+        joueur.inventaire.detecteur_actif = True
+        print("Détecteur de métaux activé - effet permanent.")
+        return False  # Reste dans l'inventaire
 
 class PatteDeLapin(ObjetPermanent):
     def __init__(self):
-        super().__init__("Patte de Lapin", "Augmente la chance de trouver des objets (y compris permanents) pendant un temps limité, puis disparaît.", 3)
+        super().__init__("Patte de Lapin", "Augmente la chance de trouver des objets (y compris permanents).", 3)
 
     def utiliser(self, joueur):
-        """Active la patte de lapin pour une durée limitée, puis elle disparaît"""
-        print("Patte de lapin activée - elle va disparaître après effet")
-        # Implémentez ici la logique d'augmentation des chances
-        # Par exemple, on pourrait set un flag temporaire dans le joueur
-        return True  # Disparaît après utilisation
+        """Active l'effet permanent (l'objet reste)."""
+        joueur.inventaire.patte_lapin_active = True
+        print("Patte de lapin activée - effet permanent.")
+        return False  # Reste dans l'inventaire
 
 
 # ITEM FACTORY

@@ -27,6 +27,8 @@ class Inventaire:
             "Détecteur de Métaux": False, 
             "Patte de Lapin": False,  
         }
+        self.detecteur_actif = False
+        self.patte_lapin_active = False
     
     # LOGIQUE DE VÉRIFICATION ET DÉPENSE
     
@@ -76,6 +78,14 @@ class Inventaire:
             return True
         return False
 
+    def a_objet_permanent(self, nom_objet: str) -> bool:
+        """
+        Vérifie si le joueur possède un objet permanent avant de tenter une action
+        (Ex: le jeu vérifie si 'Pelle' est True avant de proposer l'action 'Creuser').
+        """
+        # Le .get(nom_objet, False) permet de ne pas planter si on vérifie un objet qui n'existe pas dans le dictionnaire (il retourne False par défaut ?).
+        return self.objets_permanents.get(nom_objet, False)
+    
     #LOGIQUE DE RAMASSAGE D'OBJET (Point de connexion avec les classes Objet) ---
 
     def ramasser_objet(self, objet_instance, joueur_instance):
@@ -85,15 +95,16 @@ class Inventaire:
         """
         if objet_instance.type_objet == "Permanent":
             # Si c'est un objet permanent, on le "coche" dans le dictionnaire
-            if objet_instance.nom in self.objets_permanents:
+            if objet_instance.nom in self.objets_permanents and not self.objets_permanents[objet_instance.nom]:
                 self.objets_permanents[objet_instance.nom] = True
-                print(f"Objet permanent obtenu : {objet_instance.nom}")
+                # Les objets permanents doivent être activés pour bénéficier de l'effet immédiatement
+                # La méthode utiliser() des objets permanents a été modifiée pour ne pas les consommer
+                objet_instance.utiliser(joueur_instance) 
+                print(f"Objet permanent obtenu et activé : {objet_instance.nom}")
+            elif objet_instance.nom in self.objets_permanents and self.objets_permanents[objet_instance.nom]:
+                 print(f"Objet permanent ignoré (déjà possédé) : {objet_instance.nom}")
             else:
                 print(f"Avertissement : Objet permanent '{objet_instance.nom}' non prévu dans l'inventaire.")
-            
-            # NE PAS utiliser l'objet immédiatement - le laisser dans l'inventaire
-            # L'objet sera utilisé plus tard quand le joueur décidera de l'utiliser
-            print(f"Objet permanent ajouté à l'inventaire : {objet_instance.nom}")
             
         elif objet_instance.type_objet == "Consommable":
             # Si c'est un consommable, on appelle sa méthode utiliser immédiatement

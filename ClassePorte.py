@@ -87,8 +87,6 @@ class Porte:
             int: Niveau de verrouillage généré (0, 1 ou 2).
         
         """
-        
-        
         if ligne == hauteur_grille - 1:
             return 0    
         if ligne == 0:
