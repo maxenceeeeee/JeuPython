@@ -7,11 +7,31 @@ from Catalogue_pieces import catalogue_pieces
 import random
 
 class Piece:
-    """Représente une pièce du manoir, avec sa couleur, ses items et ses portes."""
+    """
+    Représente une pièce du manoir.
+    
+    Chaque pièce a : 
+        - un nom,
+        - une couleur,
+        - des portes (qui seront des instances de Porte),
+        - un loot (objets garanis, aléatoires, ou boutique)
+        - une image pour l'affichage,
+        - un coût en gemmes pour la selectionner,
+        - un niveau de rareté.
+    """
 
     def __init__(self, nom, couleur, portes, loot, image, cout_gemmes=0, rarete=0, endroits_creuser=0):
         """
         Initialise une pièce du manoir.
+
+        Args:
+            nom (str): Nom de la pièce.
+            couleur (str): Couleur principale de la pièce (ex: 'bleue', 'dorée', etc.).
+            portes (dict): Dictionnaire indiquant les directions et si une porte est présente (True/False).
+            loot (dict): Dictionnaire de butin (garanti, aleatoire) et boutique.
+            image (str): Nom du fichier image.
+            cout_gemmes (int): Coût en gemmes pour choisir cette pièce. 
+            rarete (int): Rareté de la pièce (0-3).
         """
         self.nom = nom
         self.couleur = couleur
@@ -100,6 +120,9 @@ class Piece:
             }
         
     def charger_image(self, zip_path="Images.zip"):
+        """
+        Charger l'image de la pièce depuis un fichier ZIP contenant toutes les images.
+        """
         if self.image is not None:
             return
         
