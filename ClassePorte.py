@@ -1,4 +1,3 @@
-## Classe porte (verrouillage, ouverture, génération)
 import random
 # On a besoin de la classe Joueur pour le type hint, mais cela crée une dépendance circulaire
 # On va utiliser un 'forward reference' (string) ou l'enlever.

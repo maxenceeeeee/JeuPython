@@ -8,9 +8,9 @@ class Objet:
     Classe de base pour tous les objets du jeu (consommables ou permanents).
     """
     def __init__(self, nom: str, description: str, type_objet: str, rarete: int):
-        # nom de l'objet qu'on va afficher à l'écran
+        # nom de l'objet quon va afficher à lécran
         self.nom = nom
-        # décrit l'effet de l'objet
+        # décrit leffet de lobjet
         self.description = description
         # type : soit consommable soit permanent
         self.type_objet = type_objet 
@@ -23,21 +23,21 @@ class Objet:
     def utiliser(self, joueur):
         """
         Méthode à implémenter dans les sous-classes. 
-        Applique l'effet de l'objet sur le joueur (ou le manoir).
-        Retourne True si l'objet est consommé, False sinon.
+        Applique leffet de lobjet sur le joueur (ou le manoir).
+        Retourne True si lobjet est consommé, False sinon.
         """
         raise NotImplementedError("La méthode 'utiliser' doit être implémentée par les sous-classes.")
 
 
 class ObjetConsommable(Objet):
     """
-    Classe de base pour tous les objets qui sont retirés de l'inventaire 
+    Classe de base pour tous les objets qui sont retirés de linventaire 
     après utilisation (nourriture, ressources, potions, etc.).
     """
     def __init__(self, nom: str, description: str, rarete: int):
         super().__init__(nom, description, "Consommable", rarete)
 
-    # La méthode utiliser doit être définie dans les sous-classes et on doit retourner True pour indiquer que l'objet est consommé
+    # La méthode utiliser doit être définie dans les sous-classes et on doit retourner True pour indiquer que lobjet est consommé
 
 
 class Nourriture(ObjetConsommable): 
@@ -48,7 +48,7 @@ class Nourriture(ObjetConsommable):
         self.pas_rendus = pas_rendus
 
     def utiliser(self, joueur):
-        """Augmente les pas du joueur et consomme l'objet."""
+        """Augmente les pas du joueur et consomme lobjet."""
         joueur.inventaire.pas += self.pas_rendus
         print(f"{self.nom} consommé : +{self.pas_rendus} pas.")
         return True # L'objet est consommé
@@ -59,11 +59,20 @@ class Pomme(Nourriture):
 
 class Banane(Nourriture):
     def __init__(self):
-        super().__init__("Banane", 5, 1)    
+        super().__init__("Banane", 3, 0)  # 3 pas comme dans le sujet
 
 class Gateau(Nourriture):
     def __init__(self):
-        super().__init__("Gâteau", 12, 2)
+        super().__init__("Gâteau", 10, 1)  # 10 pas comme dans le sujet
+
+class Sandwich(Nourriture):
+    def __init__(self):
+        super().__init__("Sandwich", 15, 1)  # 15 pas comme dans le sujet
+
+class Repas(Nourriture):
+    def __init__(self):
+        super().__init__("Repas", 25, 2)  # 25 pas comme dans le sujet
+
 
 class Ressource(ObjetConsommable):
     def __init__(self, nom : str, rarete : int, quantite : int = 1): 
@@ -88,75 +97,85 @@ class Ressource(ObjetConsommable):
 
 class Cle(Ressource):
     def __init__(self):
-        super().__init__("Clé", 1)
+        super().__init__("Clé", 0)  # Commun
 
 class PieceDor(Ressource):
     def __init__(self):
-        super().__init__("Pièce d'Or", 0)
+        super().__init__("Pièce d'Or", 0)  # Commun
         
 class Gemme(Ressource):
     def __init__(self, quantite : int = 1):
-        super().__init__("Gemme", 2, quantite)
+        super().__init__("Gemme", 1, quantite)  # Peu commun
         
 class De(Ressource):
     def __init__(self):
-        super().__init__("Dé", 1)
-
-
-class SceauSecurite(ObjetConsommable):
-    def __init__(self):
-        description = "Permet de 'figer' une des trois pièces tirées au sort, même si un Dé est ensuite utilisé."
-        super().__init__("Sceau de Sécurité", description, 2)
-
-    def utiliser(self, joueur):
-        """Déclenche la logique de 'figer' une pièce pendant le tirage."""
-        # La logique réelle d'application se fera dans la classe Jeu normalement
-        print(f"Utilisation du {self.nom}. Le prochain tirage de pièces sera 'scellé' après le premier choix.")
-        return True # L'objet est consommé
-
-class PotionTeleportation(ObjetConsommable):
-    def __init__(self):
-        description = "Permet de se déplacer immédiatement vers n'importe quelle pièce déjà découverte sans dépenser de pas."
-        super().__init__("Potion de Téléportation", description, 3)
-
-    def utiliser(self, joueur):
-        """Déclenche la logique de sélection de pièce sur la grille."""
-        # La logique de sélection de la destination doit être gérée par la classe "Jeu" normalement
-        print(f"Utilisation de la {self.nom}. Veuillez choisir une pièce de destination sur la grille.")
-        return True # L'objet est consommé
+        super().__init__("Dé", 1)  # Peu commun
 
 
 class ObjetPermanent(Objet):
     """Classe de base pour tous les objets permanents."""
     def __init__(self, nom: str, description: str, rarete: int):
-        # type_objet est ici "permanent"
         super().__init__(nom, description, "Permanent", rarete)
 
     def utiliser(self, joueur):
-        """Les objets permanents ne sont pas 'consommés' après avoir été ramassés."""
-        # L'ajout à l'inventaire se fait dans inventaire.py/ramasser_objet
-        print(f"Objet permanent ramassé : {self.nom}. Son effet est actif.")
-        return False # L'objet n'est PAS consommé/retiré de l'inventaire après usage
+        """
+        Les objets permanents sont consommés après utilisation.
+        Retourne True pour indiquer qu'ils doivent être retirés de l'inventaire.
+        """
+        print(f"Objet permanent utilisé : {self.nom}. Effet actif.")
+        return True  # L'objet EST consommé/retiré de l'inventaire
 
 class Pelle(ObjetPermanent):
     def __init__(self):
-        super().__init__("Pelle", "Permet de creuser dans des endroits spécifiques.", 2)
+        super().__init__("Pelle", "Permet de creuser une fois dans des endroits spécifiques, permettant de trouver certains objets.", 2)
+
+    def utiliser(self, joueur):
+        """Utilise la pelle pour creuser une fois, puis elle disparaît"""
+        print("Pelle utilisée - elle va disparaître")
+        # La logique de creusage est gérée dans jeu.py
+        return True  # Disparaît après utilisation
+
+class Marteau(ObjetPermanent):
+    def __init__(self):
+        super().__init__("Marteau", "Permet de briser les cadenas des coffres une fois, permettant de les ouvrir sans dépenser de clé.", 2)
+
+    def utiliser(self, joueur):
+        """Utilise le marteau une fois, puis il disparaît"""
+        print("Marteau utilisé - il va disparaître")
+        # La logique d'ouverture des coffres est gérée dans jeu.py
+        return True  # Disparaît après utilisation
 
 class KitDeCrochetage(ObjetPermanent):
     def __init__(self):
-        super().__init__("Kit de Crochetage", "Ouvre les portes verrouillées de niveau 1 sans dépenser de clé.", 3)
+        super().__init__("Kit de Crochetage", "Permet d'ouvrir une porte verrouillée de niveau 1, puis disparaît.", 2)
+
+    def utiliser(self, joueur):
+        """Utilise le kit pour ouvrir une porte, puis il disparaît"""
+        print("Kit de crochetage utilisé - il va disparaître")
+        # La logique d'ouverture des portes est gérée dans jeu.py
+        return True  # Disparaît après utilisation
         
+class DetecteurMetaux(ObjetPermanent):
+    def __init__(self):
+        super().__init__("Détecteur de Métaux", "Augmente la chance de trouver des clés et des pièces pendant un temps limité, puis disparaît.", 2)
+
+    def utiliser(self, joueur):
+        """Active le détecteur pour une durée limitée, puis il disparaît"""
+        print("Détecteur de métaux activé - il va disparaître après effet")
+        # Implémentez ici la logique d'augmentation des chances
+        # Par exemple, on pourrait set un flag temporaire dans le joueur
+        return True  # Disparaît après utilisation
+
 class PatteDeLapin(ObjetPermanent):
     def __init__(self):
-        super().__init__("Patte de Lapin", "Augmente la chance de trouver des objets (y compris permanents) dans le manoir.", 3)
+        super().__init__("Patte de Lapin", "Augmente la chance de trouver des objets (y compris permanents) pendant un temps limité, puis disparaît.", 3)
 
-class LoupeArchitecte(ObjetPermanent):
-    def __init__(self):
-        super().__init__("Loupe de l'Architecte", "Révèle le niveau de verrouillage des portes non ouvertes adjacentes à la pièce actuelle.", 2)
-        
-class PieceFauxFonds(ObjetPermanent):
-    def __init__(self):
-        super().__init__("Pièce Faux-Fonds", "Chance (10%) de ne pas dépenser une Pièce d'Or lors de l'achat dans un magasin.", 1)
+    def utiliser(self, joueur):
+        """Active la patte de lapin pour une durée limitée, puis elle disparaît"""
+        print("Patte de lapin activée - elle va disparaître après effet")
+        # Implémentez ici la logique d'augmentation des chances
+        # Par exemple, on pourrait set un flag temporaire dans le joueur
+        return True  # Disparaît après utilisation
 
 
 # ITEM FACTORY
@@ -166,6 +185,8 @@ OBJET_MAP = {
     "Pomme": Pomme,
     "Banane": Banane,
     "Gâteau": Gateau,
+    "Sandwich": Sandwich,
+    "Repas": Repas,
     
     # Ressources
     "Clé": Cle,
@@ -173,15 +194,10 @@ OBJET_MAP = {
     "Gemme": Gemme,
     "Dé": De,
     
-    # Objets Spéciaux
-    "Sceau de Sécurité": SceauSecurite,
-    "Potion de Téléportation": PotionTeleportation,
-    
-    # Objets Permanents
+    # Objets Permanents (maintenant à usage unique)
     "Pelle": Pelle,
+    "Marteau": Marteau,
     "Kit de Crochetage": KitDeCrochetage,
+    "Détecteur de Métaux": DetecteurMetaux,
     "Patte de Lapin": PatteDeLapin,
-    "Loupe de l'Architecte": LoupeArchitecte,
-    "Pièce Faux-Fonds": PieceFauxFonds,
-    
 }

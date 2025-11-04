@@ -1,45 +1,32 @@
-## CLASSE DE BASE : PIECE
-
 from ClassePorte import *
 import pygame
 import os
 from zipfile import ZipFile
 from io import BytesIO
 from Catalogue_pieces import catalogue_pieces
+import random
 
 class Piece:
     """Représente une pièce du manoir, avec sa couleur, ses items et ses portes."""
 
-    def __init__(self, nom, couleur, portes, loot, image, cout_gemmes=0, rarete=0): # 'items' est devenu 'loot'
+    def __init__(self, nom, couleur, portes, loot, image, cout_gemmes=0, rarete=0, endroits_creuser=0):
         """
         Initialise une pièce du manoir.
-
-        Args:
-            nom (str): Nom de la pièce.
-            couleur (str): Couleur principale de la pièce (ex: 'bleue', 'dorée', etc.).
-            portes (dict): Dictionnaire indiquant les directions et si une porte est présente (True/False).
-            loot (dict): Dictionnaire de butin (garanti, aleatoire) et boutique.
-            image (str): Nom du fichier image.
-            cout_gemmes (int): Coût en gemmes pour choisir cette pièce. 
-            rarete (int): Rareté de la pièce (0-3).
         """
         self.nom = nom
         self.couleur = couleur
-        self.portes_objets = {} # C'est manoir.py qui va remplir ça
+        self.portes_objets = {}
         self.loot = loot or {}  
         self.image_nom = image 
         self.image = None  
         self.cout_gemmes = cout_gemmes
         self.rarete = rarete
-        
-        #
-        # On stocke le dictionnaire de configuration des portes (ex: {'haut': True, ...})
-        # On NE CRÉE PAS d'objets Porte() ici.
         self.portes = portes
-        
-        
-        # On stocke aussi les données de la boutique (peut être None)
         self.magasin = self.loot.get("magasin", None)
+        
+        # Gestion des endroits à creuser
+        self.endroits_creuser = endroits_creuser
+        self.endroit_creuse = False
 
     def afficher_infos(self):
         """Affiche les informations principales de la pièce."""
@@ -47,42 +34,115 @@ class Piece:
         print(f"Couleur : {self.couleur.capitalize()}")
         print(f"Loot : {self.loot}")
         print(f"Coût : {self.cout_gemmes} gemmes, Rareté : {self.rarete}")
+        print(f"Endroits à creuser : {self.endroits_creuser} (creusé: {self.endroit_creuse})")
         print("Portes :")
         for direction, porte in self.portes.items():
             if porte:
-                print(f"  - {direction} (niveau {porte.niveau_verrou})")
+                print(f"  - {direction} (niveau {porte.niveau})")
         print()
 
     def niveau_porte(self, direction: str) -> int:
-        #On utilise portes_objets qui contient les instances de Porte
         porte = self.portes_objets.get(direction)
         if porte is not None:
-            #L'attribut s'appelle 'niveau' dans ClassePorte.py
             return porte.niveau
         else:
             return -1
+
+    def peut_creuser(self) -> bool:
+        """Vérifie si on peut creuser dans cette pièce."""
+        return self.endroits_creuser > 0 and not self.endroit_creuse
+
+    def creuser(self) -> dict:
+        """
+        Tente de creuser dans la pièce. Retourne un dictionnaire avec:
+        - 'success': True si creusage réussi et objet trouvé, False si échec
+        - 'objet': nom de l'objet trouvé (si success=True)
+        - 'message': message à afficher
+        """
+        if not self.peut_creuser():
+            return {'success': False, 'message': "Aucun endroit où creuser ici ou déjà creusé."}
+        
+        # Marquer comme creusé
+        self.endroit_creuse = True
+        
+        # Déterminer si on trouve quelque chose (60% de chance de succès)
+        if random.random() < 0.6:
+            # Table de loot pour le creusage
+            loot_possibles = [
+                ("Pièce d'Or", 0.3),
+                ("Clé", 0.25), 
+                ("Gemme", 0.2),
+                ("Pomme", 0.1),
+                ("Banane", 0.08),
+                ("Gâteau", 0.05),
+                ("Dé", 0.02)
+            ]
+            
+            # Tirer un objet au sort selon les probabilités
+            objet_trouve = None
+            r = random.random()
+            cumul = 0
+            for objet, proba in loot_possibles:
+                cumul += proba
+                if r <= cumul:
+                    objet_trouve = objet
+                    break
+            
+            return {
+                'success': True, 
+                'objet': objet_trouve,
+                'message': f"Vous creusez et trouvez : {objet_trouve} !"
+            }
+        else:
+            return {
+                'success': False,
+                'message': "Vous creusez mais ne trouvez rien..."
+            }
         
     def charger_image(self, zip_path="Images.zip"):
         if self.image is not None:
             return
         
-        # Assumons que Images.zip est au même niveau que le script
         script_dir = os.path.dirname(__file__)
         zip_path_complet = os.path.join(script_dir, zip_path)
         
         if not os.path.exists(zip_path_complet):
             print(f"Erreur : {zip_path_complet} non trouvé.")
-            # Créer une image de remplacement
-            self.image = pygame.Surface((80, 80))
-            self.image.fill((128, 0, 128)) # Une couleur flashy (violet) pour voir l'erreur
-            font = pygame.font.Font(None, 20)
-            text = font.render("IMG ZIP?", True, (255, 255, 255))
-            text_rect = text.get_rect(center=(40, 40))
-            self.image.blit(text, text_rect)
+            self._creer_image_par_defaut()
             return
 
-        with ZipFile(zip_path_complet, "r") as archive:
-                with archive.open(self.image_nom) as file:
-                    file_bytes = BytesIO(file.read())
-                    file_bytes.seek(0) 
-                    self.image = pygame.image.load(file_bytes).convert_alpha()
+        try:
+            with ZipFile(zip_path_complet, "r") as archive:
+                # Vérifier si l'image existe dans le ZIP
+                if self.image_nom in archive.namelist():
+                    with archive.open(self.image_nom) as file:
+                        file_bytes = BytesIO(file.read())
+                        file_bytes.seek(0) 
+                        self.image = pygame.image.load(file_bytes).convert_alpha()
+                else:
+                    print(f"Image {self.image_nom} non trouvée dans {zip_path_complet}")
+                    self._creer_image_par_defaut()
+        except Exception as e:
+            print(f"Erreur chargement image {self.image_nom}: {e}")
+            self._creer_image_par_defaut()
+
+    def _creer_image_par_defaut(self):
+        """Crée une image par défaut avec la couleur de la pièce."""
+        self.image = pygame.Surface((80, 80))
+        couleurs = {
+            "bleue": (0, 0, 255),
+            "dorée": (255, 215, 0),
+            "verte": (0, 255, 0),
+            "violette": (128, 0, 128),
+            "grise": (128, 128, 128),
+            "blanche": (255, 255, 255),
+            "brune": (139, 69, 19)
+        }
+        couleur = couleurs.get(self.couleur, (128, 128, 128))
+        self.image.fill(couleur)
+        font = pygame.font.Font(None, 15)
+        mots = self.nom.split()
+        for i, mot in enumerate(mots):
+            text = font.render(mot, True, (0, 0, 0))
+            text_rect = text.get_rect(center=(40, 30 + i*15))
+            self.image.blit(text, text_rect)

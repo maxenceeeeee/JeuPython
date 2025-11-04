@@ -25,10 +25,7 @@ class Inventaire:
             "Marteau": False,          
             "Kit de Crochetage": False, 
             "Détecteur de Métaux": False, 
-            "Patte de Lapin": False,   
-            "Loupe de l'Architecte": False,
-            "Pièce Faux-Fonds": False, 
-            "Bracelet de Résistance": False,
+            "Patte de Lapin": False,  
         }
     
     # LOGIQUE DE VÉRIFICATION ET DÉPENSE
@@ -93,13 +90,16 @@ class Inventaire:
                 print(f"Objet permanent obtenu : {objet_instance.nom}")
             else:
                 print(f"Avertissement : Objet permanent '{objet_instance.nom}' non prévu dans l'inventaire.")
-            # L'objet appelle sa propre méthode 'utiliser' (qui ne fait rien et retourne False)
-            objet_instance.utiliser(joueur_instance)
+            
+            # NE PAS utiliser l'objet immédiatement - le laisser dans l'inventaire
+            # L'objet sera utilisé plus tard quand le joueur décidera de l'utiliser
+            print(f"Objet permanent ajouté à l'inventaire : {objet_instance.nom}")
             
         elif objet_instance.type_objet == "Consommable":
-            # Si c'est un consommable, on appelle sa méthode utiliser.
-            # La méthode (ex: Cle.utiliser) s'occupe elle-même d'incrémenter les clés, pas, etc., du joueur.
-            objet_instance.utiliser(joueur_instance)
+            # Si c'est un consommable, on appelle sa méthode utiliser immédiatement
+            est_consomme = objet_instance.utiliser(joueur_instance)
+            # Pour les ressources, on ne les retire pas de l'inventaire car elles sont stockées comme compteurs
+            # Pour la nourriture, elles sont consommées immédiatement
             
         else:
             print(f"Erreur: Type d'objet inconnu : {objet_instance.type_objet}")
