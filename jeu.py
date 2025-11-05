@@ -247,7 +247,7 @@ class Jeu:
             y_texte += 30
 
         if self.creusage_disponible and self.etat_jeu == "Deplacement":
-            indication_creuser = self.font_petit.render("Appuyez sur C pour creuser", True, (128, 0, 0))
+            indication_creuser = self.font_petit.render("Appuyez sur C pour creuser", True, (255, 255, 0))
             self.screen.blit(indication_creuser, (x + 10, y_texte))
 
     def affichage_selection_pieces(self):
@@ -580,7 +580,7 @@ class Jeu:
         else:
             self.message_statut = f"Pas assez de gemmes ! (Requis : {piece_choisie.cout_gemmes})"
 
-    def utiliser_de(self):
+    def utiliser_de(self,):
         if self.joueur.inventaire.depenser_des(1): 
             ligne, col = self.nouvelle_piece_coords
             self.pieces_proposees = self.manoir.tirer_trois_pieces(
@@ -670,13 +670,9 @@ class Jeu:
         
         objet_instance = self._instancier_objet(nom_objet)
         if objet_instance:
-            est_consomme = objet_instance.utiliser(self.joueur)
+            objet_instance.utiliser(self.joueur) 
             
-            if est_consomme:
-                self.joueur.inventaire.objets_permanents[nom_objet] = False
-                self.message_statut = f"Vous utilisez : {nom_objet} - son effet est passé et il disparaît !"
-            else:
-                self.message_statut = f"Avantage permanent activé : {nom_objet} (reste en votre possession)."
+            self.message_statut = f"{nom_objet} utilisé. Il reste dans l'inventaire."
             
             self._mettre_a_jour_creusage_disponible()
             return True

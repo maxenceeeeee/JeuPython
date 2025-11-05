@@ -147,7 +147,7 @@ catalogue_pieces = [
     {
         "nom": "Pantry",
         "couleur": "verte",
-        "portes": {"up": False, "down": False, "left": True, "right": True},
+        "portes": {"up": False, "down": True, "left": True, "right": False},
         "loot": {
             "garanti": ["Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Détecteur de Métaux"],  # Détecteur garanti
             "aleatoire": [("Banane", 0.5), ("Pomme", 0.7), ("Repas", 0.3)]  # Probabilités augmentées
