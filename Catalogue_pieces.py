@@ -7,6 +7,9 @@ Le "loot" est un dictionnaire qui peut contenir :
 - "endroits_creuser": int (0 ou 1) - nombre d'endroits où creuser
 """
 
+###ajouter des pieces pour aller vers le haut
+
+
 catalogue_pieces = [
     {
         "nom": "Entrance Hall",
@@ -228,5 +231,60 @@ catalogue_pieces = [
         "image": "Images/antechamber.webp",
         "cout_gemmes": 0,
         "rarete": 0
+    },
+    
+    {
+        "nom": "Upper Hall",
+        "couleur": "bleue",
+        "portes": {"up": True, "down": True, "left": True, "right": True},
+        "loot": {
+            "garanti": ["Pièce d'Or"],
+            "aleatoire": [("Gemme", 0.3)]
+        },
+        "image" : "Images/upperhall.webp",
+        "cout_gemmes": 1,
+        "rarete": 1
+    },
+    {
+        "nom": "Gallery",
+        "couleur": "blanche",
+        "portes": {"up": True, "down": True, "left": False, "right": True},
+        "loot": {
+            "garanti": [],
+            "aleatoire": [("Pièce d'Or", 0.5), ("Clé", 0.2)]
+        },
+        "image" : "Images/gallery.webp",
+        "cout_gemmes": 1,
+        "rarete": 1
+    },
+    {
+        "nom": "Tower Room",
+        "couleur": "violette",
+        "portes": {"up": True, "down": True, "left": True, "right": False},
+        "loot": {
+            "garanti": ["Gemme"],
+            "aleatoire": [("Potion", 0.2)]
+        },
+        "image" : "Images/towerroom.webp",
+        "cout_gemmes": 2,
+        "rarete": 2
+    },
+    {
+        "nom": "Sky Chamber",
+        "couleur": "dorée",
+        "portes": {"up": True, "down": True, "left": True, "right": True},
+        "loot": {
+            "garanti": [],
+            "aleatoire": [("Clé", 0.5)],
+            "magasin": [
+                {"item": "Gemmes", "prix": 5},
+                {"item": "Potion", "prix": 8}
+            ]
+        },
+        "image" : "Images/skychamber.webp",
+        "cout_gemmes": 2,
+        "rarete": 2
     }
 ]
+
+

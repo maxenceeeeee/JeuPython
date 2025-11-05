@@ -2,6 +2,7 @@
 # (cela nécessite que la classe Inventaire soit importée ou définie par nous déja)
 
 from inventaire import Inventaire
+from typing import Tuple
 
 class Joueur:
     """
@@ -22,7 +23,7 @@ class Joueur:
         
     # MÉTHODES DE DÉPLACEMENT ET POSITION
     
-    def calcul_coordonnees_casead(self, choix: str) -> tuple[int, int]:
+    def calcul_coordonnees_casead(self, choix: str) -> Tuple[int, int]:
         """Calcule les coordonnées de la case adjacente en fonction du choix ('up', 'down', etc.)."""
         case_ligne, case_colonne = 0, 0
         if choix == 'up':

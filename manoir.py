@@ -2,6 +2,7 @@ import random
 from ClassePiece import Piece
 from ClassePorte import Porte
 from Catalogue_pieces import catalogue_pieces
+from typing import List
 
 
 class Manoir:
@@ -24,7 +25,7 @@ class Manoir:
         self._placer_piece_depart()
         self._placer_piece_finale()
 
-    def _initialiser_pioche(self) -> list[Piece]:
+    def _initialiser_pioche(self) -> List[Piece]:
         """
         Crée la pioche d'objets Piece à partir du catalogue de dictionnaires.
         L'Entrance Hall et l'Antechamber sont exclues de la pioche.
