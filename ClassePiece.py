@@ -9,15 +9,21 @@ import random
 class Piece:
     """
     Représente une pièce du manoir.
+
+    Attributs :
+        nom (str) : Nom de la pièce.
+        couleur (str) : Couleur principale de la pièce.
+        portes (dict) : Dictionnaire des portes {'up', 'down', 'left', 'right'} avec booléens.
+        loot (dict) : Contient les objets garantis, aléatoires et boutique.
+        image_nom (str) : Nom du fichier image de la pièce.
+        image (pygame.Surface) : Image chargée pour l'affichage.
+        cout_gemmes (int) : Coût en gemmes pour choisir cette pièce.
+        rarete (int) : Niveau de rareté de la pièce (0-3).
+        portes_objets (dict) : Dictionnaire des objets Porte correspondant aux directions.
+        magasin (list) : Contenu de la boutique (si présent dans le loot).
+        endroits_creuser (int) : Nombre d'endroits où le joueur peut creuser.
+        endroit_creuse (bool) : Indique si la pièce a déjà été creusée.
     
-    Chaque pièce a : 
-        - un nom,
-        - une couleur,
-        - des portes (qui seront des instances de Porte),
-        - un loot (objets garanis, aléatoires, ou boutique)
-        - une image pour l'affichage,
-        - un coût en gemmes pour la selectionner,
-        - un niveau de rareté.
     """
 
     def __init__(self, nom, couleur, portes, loot, image, cout_gemmes=0, rarete=0, endroits_creuser=0):
@@ -32,6 +38,8 @@ class Piece:
             image (str): Nom du fichier image.
             cout_gemmes (int): Coût en gemmes pour choisir cette pièce. 
             rarete (int): Rareté de la pièce (0-3).
+            endroits_creuser (int, optional) : Nombre d'endroits creusables. Defaults to 0.
+
         """
         self.nom = nom
         self.couleur = couleur
@@ -49,7 +57,14 @@ class Piece:
         self.endroit_creuse = False
 
     def afficher_infos(self):
-        """Affiche les informations principales de la pièce."""
+        """
+        Affiche les informations principales de la pièce.
+        - Nom et couleur
+        - Loot garanti et aléatoire
+        - Coût et rareté
+        - Endroits à creuser et état
+        - Portes disponibles avec niveau
+        """
         print(f"Pièce : {self.nom}")
         print(f"Couleur : {self.couleur.capitalize()}")
         print(f"Loot : {self.loot}")
@@ -62,6 +77,16 @@ class Piece:
         print()
 
     def niveau_porte(self, direction: str) -> int:
+        """ 
+        Retourne le niveau de verrouillage de la porte dans la direction donnée.
+
+        Args:
+            direction (str) : Direction de la porte ('up', 'down', 'left', 'right').
+
+        Returns:
+            int : Niveau de la porte si elle existe, -1 sinon.
+        """
+        
         porte = self.portes_objets.get(direction)
         if porte is not None:
             return porte.niveau
@@ -69,52 +94,63 @@ class Piece:
             return -1
 
     def peut_creuser(self) -> bool:
-        """Vérifie si on peut creuser dans cette pièce."""
+        """
+        Vérifie si on peut creuser dans cette pièce.
+        
+        Returns:
+            bool : True si on peut creuser, False sinon.
+        """
         return self.endroits_creuser > 0 and not self.endroit_creuse
 
     def creuser(self, patte_lapin_active: bool) -> dict:
-            """
-            Tente de creuser dans la pièce. Retourne un dictionnaire avec:
-            - 'success': True si creusage réussi et objet trouvé, False si échec
-            - 'objet': nom de l'objet trouvé (si success=True)
-            - 'message': message à afficher
-            """
-            if not self.peut_creuser():
-                return {'success': False, 'message': "Aucun endroit où creuser ici ou déjà creusé."}
+        """
+        Tente de creuser dans la pièce et retourne le résultat.
+
+        Args:
+        patte_lapin_active (bool) : Indique si l'objet 'Patte de Lapin' est actif pour augmenter la chance.
+
+        Returns:
+            dict : Contient :
+                - 'success' (bool) : True si un objet a été trouvé, False sinon.
+                - 'objet' (str) : Nom de l'objet trouvé (si success=True).
+                - 'message' (str) : Message à afficher au joueur.
+        """
+        if not self.peut_creuser():
+            return {'success': False, 'message': "Aucun endroit où creuser ici ou déjà creusé."}
             
-            # Marquer comme creusé
-            self.endroit_creuse = True
+        # Marquer comme creusé
+        self.endroit_creuse = True
             
-            chance_base = 0.6
-            if patte_lapin_active:
+        chance_base = 0.6
+        if patte_lapin_active:
                 chance_base = min(1.0, chance_base + 0.2) # Augmente la chance de succès de 20% max 100%
 
-            # Déterminer si on trouve quelque chose
-            if random.random() < chance_base:
-                # Table de loot pour le creusage
-                loot_possibles = [
-                    ("Pièce d'Or", 0.3),
-                    ("Clé", 0.25), 
-                    ("Gemme", 0.2),
-                    ("Pomme", 0.1),
-                    ("Banane", 0.08),
-                    ("Gâteau", 0.05),
-                    ("Dé", 0.02)
-                ]
+        # Déterminer si on trouve quelque chose
+        if random.random() < chance_base:
+            # Table de loot pour le creusage
+            loot_possibles = [
+                ("Pièce d'Or", 0.3),
+                ("Clé", 0.25), 
+                ("Gemme", 0.2),
+                ("Pomme", 0.1),
+                ("Banane", 0.08),
+                ("Gâteau", 0.05),
+                ("Dé", 0.02)
+            ]
                 
-                # Tirer un objet au sort selon les probabilités
-                objet_trouve = None
-                r = random.random()
-                cumul = 0
-                for objet, proba in loot_possibles:
-                    cumul += proba
-                    if r <= cumul:
-                        objet_trouve = objet
-                        break
+            # Tirer un objet au sort selon les probabilités
+            objet_trouve = None
+            r = random.random()
+            cumul = 0
+            for objet, proba in loot_possibles:
+                cumul += proba
+                if r <= cumul:
+                    objet_trouve = objet
+                    break
                 
-                # S'assurer de toujours trouver quelque chose si succès
-                if objet_trouve is None:
-                    objet_trouve = "Pièce d'Or" 
+            # S'assurer de toujours trouver quelque chose si succès
+            if objet_trouve is None:
+                objet_trouve = "Pièce d'Or" 
 
                 return {
                     'success': True, 
@@ -129,7 +165,13 @@ class Piece:
         
     def charger_image(self, zip_path="Images.zip"):
         """
-        Charger l'image de la pièce depuis un fichier ZIP contenant toutes les images.
+        Charge l'image de la pièce depuis un fichier ZIP contenant toutes les images.
+
+        Args:
+            zip_path (str, optional) : Chemin vers l'archive ZIP contenant les images. Defaults to "Images.zip".
+
+        Notes:
+            Si l'image n'existe pas dans le ZIP, une image par défaut est générée.
         """
         if self.image is not None:
             return

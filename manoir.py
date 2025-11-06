@@ -8,10 +8,25 @@ from typing import List
 class Manoir:
     """
     Gère la grille du manoir 5x9, la pioche de pièces
-    et la logique de placement.
+    et la logique de placement des pièces dans le jeu.
+    
+    Attributes:
+        lignes (int): Nombre de lignes de la grille.
+        colonnes (int): Nombre de colonnes de la grille.
+        grille (list[list[Piece|None]]): Grille 2D contenant les pièces ou None.
+        pioche (list[Piece]): Liste des pièces disponibles à placer.
     """
 
     def __init__(self, lignes_jeu=9, colonnes_jeu=5):
+        """
+        Initialise le manoir avec une grille vide et la pioche de pièces.
+        Place automatiquement l'Entrance Hall et l'Antechamber aux positions
+        définies.
+
+        Args:
+            lignes_jeu (int): Nombre de lignes dans la grille.
+            colonnes_jeu (int): Nombre de colonnes dans la grille.
+        """
         self.lignes = lignes_jeu
         self.colonnes = colonnes_jeu
 
@@ -29,6 +44,10 @@ class Manoir:
         """
         Crée la pioche d'objets Piece à partir du catalogue de dictionnaires.
         L'Entrance Hall et l'Antechamber sont exclues de la pioche.
+        
+        Returns:
+            List[Piece]: Liste des objets Piece prêts à être tirés.
+        
         """
         pioche = []
         for data_piece in catalogue_pieces:
@@ -41,7 +60,7 @@ class Manoir:
 
     def _placer_piece_depart(self):
         """
-        Trouve l'Entrance Hall, la crée et la place sur la grille (8, 2).
+        Trouve l'Entrance Hall, la crée et la place sur la grille à la position (8,2).
         Initialise ses portes comme étant déverrouillées et ouvertes.
         """
         pos_ligne, pos_col = 8, 2
@@ -56,6 +75,11 @@ class Manoir:
                 piece_entree.portes_objets[direction] = Porte(niveau=0, ouverte=True)
 
     def _placer_piece_finale(self):
+        """
+        Place l'Antechamber à la position (0,2) sur la grille.
+        Initialise les portes comme fermées, avec un niveau de verrouillage
+        dépendant de la position.        
+        """
         pos_ligne, pos_col = 0, 2
         data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antechamber"), None)
         piece_finale = Piece(**data_finale)
@@ -72,7 +96,14 @@ class Manoir:
 
     def get_piece_at(self, ligne: int, colonne: int) -> Piece | None:
         """
-        Récupère l'objet Piece aux coordonnées données.
+        Récupère la pièce à la position donnée dans la grille.
+
+        Args:
+            ligne (int): Numéro de ligne.
+            colonne (int): Numéro de colonne.
+
+        Returns:
+            Piece | None: L'objet Piece à la position ou None si vide ou hors limites.
         """
         if 0 <= ligne < self.lignes and 0 <= colonne < self.colonnes:
             return self.grille[ligne][colonne]
@@ -80,6 +111,21 @@ class Manoir:
 
     def placer_piece(self, piece: Piece, ligne: int, colonne: int,
                     ligne_entree: int, col_entree: int, direction_mouvement: str):
+        """
+        Place une pièce sur la grille aux coordonnées données et crée ses portes.
+
+        Args:
+            piece (Piece): La pièce à placer.
+            ligne (int): Ligne où placer la pièce.
+            colonne (int): Colonne où placer la pièce.
+            ligne_entree (int): Ligne de la pièce depuis laquelle on arrive.
+            col_entree (int): Colonne de la pièce depuis laquelle on arrive.
+            direction_mouvement (str): Direction du mouvement ('up', 'down', 'left', 'right').
+
+        Notes:
+            - La porte correspondant à l'entrée est ouverte et déverrouillée.
+            - Les autres portes sont générées avec un niveau de verrouillage mais fermées par défaut.
+        """
         if not (0 <= ligne < self.lignes and 0 <= colonne < self.colonnes):
             return
 
@@ -116,6 +162,17 @@ class Manoir:
         """
         Tire 3 pièces candidates pour le nouvel emplacement, en respectant la rareté,
         la règle de la pièce gratuite et la continuité des portes.
+        
+        Args:
+            ligne_actuelle (int): Ligne de la pièce actuelle.
+            col_actuelle (int): Colonne de la pièce actuelle.
+            ligne_nouvelle (int): Ligne de la nouvelle pièce à placer.
+            col_nouvelle (int): Colonne de la nouvelle pièce à placer.
+            direction_mouvement (str): Direction depuis laquelle on entre dans la nouvelle pièce.
+
+        Returns:
+            list[Piece]: Liste de 3 pièces candidates pour le joueur (peut être < 3 si pas assez de pièces compatibles).
+        
         """
         directions_opposees = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}
         porte_requise = directions_opposees[direction_mouvement]
