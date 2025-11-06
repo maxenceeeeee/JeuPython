@@ -1,23 +1,15 @@
 """
 Dictionnaire de 15 pièces représentatives du jeu, avec nom, couleur, portes et loot.
-Le "loot" est un dictionnaire qui peut contenir :
-- "garanti": liste d'objets (str) toujours donnés.
-- "aleatoire": liste de (objet_str, proba_de_0_a_1)
-- "magasin": liste de {"item": str, "prix": int}
-- "endroits_creuser": int (0 ou 1) - nombre d'endroits où creuser
+CATALOGUE FINAL AVEC AUGMENTATION DES GEMMES ET CLÉS.
 """
-
-###ajouter des pieces pour aller vers le haut
-
-
 catalogue_pieces = [
     {
         "nom": "Entrance Hall",
         "couleur": "bleue",
         "portes": {"up": True, "down": False, "left": True, "right": True},
         "loot": {
-            "garanti": ["Pièce d'Or", "Pièce d'Or", "Clé"],  # Clé ajoutée en garanti
-            "aleatoire": [("Clé", 0.5), ("Pomme", 0.3)]  # Probabilités augmentées
+            "garanti": ["Pièce d'Or", "Pièce d'Or", "Clé"], 
+            "aleatoire": [("Clé", 0.6), ("Pomme", 0.3)]
         },
         "endroits_creuser": 0,
         "image": "Images/entrancehall.webp",
@@ -26,13 +18,13 @@ catalogue_pieces = [
     },
     {
         "nom": "The Foundation",
-        "couleur": "grise",
+        "couleur": "bleue",
         "portes": {"up": True, "down": True, "left": True, "right": True},
         "loot": {
-            "garanti": ["Pièce d'Or", "Pièce d'Or"],  # Deux pièces garanties
-            "aleatoire": [("Pièce d'Or", 0.7), ("Clé", 0.4), ("Pelle", 0.2)]  # Pelle ajoutée à 20%
+            "garanti": ["Pièce d'Or", "Pièce d'Or", "Gemme"], 
+            "aleatoire": [("Pièce d'Or", 0.7), ("Clé", 0.5), ("Pelle", 0.2)]
         },
-        "endroits_creuser": 0,
+        "endroits_creuser": 1,
         "image": "Images/foundation.webp",
         "cout_gemmes": 0,
         "rarete": 1
@@ -42,8 +34,8 @@ catalogue_pieces = [
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": True, "right": False},
         "loot": {
-            "garanti": ["Clé", "Clé"],  # Deux clés garanties
-            "aleatoire": [("Clé", 0.7), ("Pièce d'Or", 1.0), ("Pomme", 0.5), ("Kit de Crochetage", 0.15)]  # Kit à 15%
+            "garanti": ["Clé", "Clé"], 
+            "aleatoire": [("Clé", 0.8), ("Pièce d'Or", 1.0), ("Pomme", 0.5), ("Kit de Crochetage", 0.05)] 
         },
         "endroits_creuser": 0,
         "image": "Images/nook.webp",
@@ -55,8 +47,8 @@ catalogue_pieces = [
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": False, "right": False},
         "loot": {
-            "garanti": ["Clé", "Clé", "Marteau"],  # Marteau garanti
-            "aleatoire": [("Clé", 0.4), ("Pièce d'Or", 0.3)]  # Probabilités augmentées
+            "garanti": ["Clé", "Clé", "Marteau"], 
+            "aleatoire": [("Clé", 0.4), ("Pièce d'Or", 0.3)] 
         },
         "endroits_creuser": 0,
         "image": "Images/garage.webp",
@@ -68,8 +60,8 @@ catalogue_pieces = [
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": True, "right": False},
         "loot": {
-            "garanti": ["Dé", "Dé"],  # Deux dés garantis
-            "aleatoire": [("Pièce d'Or", 0.9), ("Dé", 0.4), ("Gemme", 0.2)]  # Probabilités augmentées
+            "garanti": ["Dé", "Dé"], 
+            "aleatoire": [("Pièce d'Or", 0.9), ("Dé", 0.4), ("Gemme", 0.3)]
         },
         "endroits_creuser": 0,
         "image": "Images/musicroom.webp",
@@ -81,8 +73,8 @@ catalogue_pieces = [
         "couleur": "bleue",
         "portes": {"up": True, "down": True, "left": False, "right": False},
         "loot": {
-            "garanti": ["Pièce d'Or", "Clé", "Pelle"],  # Pelle garanti
-            "aleatoire": [("Clé", 0.3), ("Kit de Crochetage", 0.25)]  # Kit à 25%
+            "garanti": ["Pièce d'Or", "Clé", "Pelle"], 
+            "aleatoire": [("Clé", 0.3), ("Kit de Crochetage", 0.10)] # CORRECTION: 0.25 -> 0.10
         },
         "endroits_creuser": 0,
         "image": "Images/lockerroom.webp",
@@ -94,8 +86,8 @@ catalogue_pieces = [
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": True, "right": True},
         "loot": {
-            "garanti": ["Gemme", "Gemme"],  # Deux gemmes garanties
-            "aleatoire": [("Clé", 0.7), ("Patte de Lapin", 0.4), ("Détecteur de Métaux", 0.3)]  # Probabilités augmentées
+            "garanti": ["Gemme", "Gemme", "Gemme"], 
+            "aleatoire": [("Clé", 0.7), ("Patte de Lapin", 0.4), ("Détecteur de Métaux", 0.3)] 
         },
         "endroits_creuser": 0,
         "image": "Images/den.webp",
@@ -107,8 +99,8 @@ catalogue_pieces = [
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": False, "right": False},
         "loot": {
-            "garanti": ["Gemme", "Gemme", "Banane"],  # Banane garantie
-            "aleatoire": [("Gemme", 0.3), ("Banane", 0.5), ("Repas", 0.2)]  # Probabilités augmentées
+            "garanti": ["Gemme", "Gemme", "Gemme", "Banane"], 
+            "aleatoire": [("Gemme", 0.4), ("Banane", 0.5), ("Repas", 0.2)] 
         },
         "endroits_creuser": 0,
         "image": "Images/winecellar.webp",
@@ -120,13 +112,13 @@ catalogue_pieces = [
         "couleur": "dorée",
         "portes": {"up": False, "down": True, "left": True, "right": False},
         "loot": {
-            "garanti": ["Gemme", "Gemme", "Gemme"],  # Trois gemmes garanties
+            "garanti": ["Gemme"] * 4, 
             "aleatoire": [("Pièce d'Or", 0.6)],
             "magasin": [
-                {"item": "Clé", "prix": 3},        # Prix réduits
+                {"item": "Clé", "prix": 3}, 
                 {"item": "Dé", "prix": 5},
                 {"item": "Pomme", "prix": 1},
-                {"item": "Kit de Crochetage", "prix": 15}  # Kit ajouté au magasin
+                {"item": "Kit de Crochetage", "prix": 15} 
             ]
         },
         "endroits_creuser": 0,
@@ -136,11 +128,11 @@ catalogue_pieces = [
     },
     {
         "nom": "Ballroom",
-        "couleur": "blanche",
+        "couleur": "bleue",
         "portes": {"up": True, "down": True, "left": False, "right": False},
         "loot": {
-            "garanti": ["Gemme", "Gâteau"],  # Gâteau garanti
-            "aleatoire": [("Pièce d'Or", 0.5), ("Gâteau", 0.3), ("Sandwich", 0.2)]  # Probabilités augmentées
+            "garanti": ["Gemme", "Gemme", "Gâteau"], 
+            "aleatoire": [("Pièce d'Or", 0.5), ("Gâteau", 0.3), ("Sandwich", 0.2)] 
         },
         "endroits_creuser": 0,
         "image": "Images/ballroom.webp",
@@ -149,11 +141,11 @@ catalogue_pieces = [
     },
     {
         "nom": "Pantry",
-        "couleur": "verte",
+        "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": True, "right": False},
         "loot": {
-            "garanti": ["Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Détecteur de Métaux"],  # Détecteur garanti
-            "aleatoire": [("Banane", 0.5), ("Pomme", 0.7), ("Repas", 0.3)]  # Probabilités augmentées
+            "garanti": ["Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Détecteur de Métaux"], 
+            "aleatoire": [("Banane", 0.5), ("Pomme", 0.7), ("Repas", 0.3)] 
         },
         "endroits_creuser": 1,
         "image": "Images/pantry.webp",
@@ -165,8 +157,8 @@ catalogue_pieces = [
         "couleur": "bleue",
         "portes": {"up": True, "down": True, "left": False, "right": False},
         "loot": {
-            "garanti": ["Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Dé"],  # Dé garanti
-            "aleatoire": [("Pièce d'Or", 0.7), ("Dé", 0.4), ("Gemme", 0.3)]  # Probabilités augmentées
+            "garanti": ["Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Pièce d'Or", "Dé"], 
+            "aleatoire": [("Pièce d'Or", 0.7), ("Dé", 0.4), ("Gemme", 0.3)] 
         },
         "endroits_creuser": 0,
         "image": "Images/rumpusroom.webp",
@@ -175,11 +167,11 @@ catalogue_pieces = [
     },
     {
         "nom": "Observatory",
-        "couleur": "violette",
+        "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": True, "right": False},
         "loot": {
-            "garanti": ["Kit de Crochetage"],  # Kit garanti
-            "aleatoire": [("Gâteau", 0.3), ("Gemme", 0.4), ("Patte de Lapin", 0.35)]  # Probabilités augmentées
+            "garanti": ["Kit de Crochetage", "Gemme"], 
+            "aleatoire": [("Gâteau", 0.3), ("Gemme", 0.4), ("Patte de Lapin", 0.35)] 
         },
         "endroits_creuser": 0,
         "image": "Images/observatory.webp",
@@ -191,8 +183,8 @@ catalogue_pieces = [
         "couleur": "brune",
         "portes": {"up": False, "down": True, "left": True, "right": False},
         "loot": {
-            "garanti": ["Pièce d'Or", "Pièce d'Or"],  # Deux pièces garanties
-            "aleatoire": [("Pièce d'Or", 0.3), ("Dé", 0.4), ("Sceau de Sécurité", 0.25)]  # Probabilités augmentées
+            "garanti": ["Pièce d'Or", "Pièce d'Or"], 
+            "aleatoire": [("Pièce d'Or", 0.3), ("Dé", 0.4), ("Patte de Lapin", 0.25), ("Gemme", 0.2)] 
         },
         "endroits_creuser": 0,
         "image": "Images/library.webp",
@@ -201,13 +193,13 @@ catalogue_pieces = [
     },
     {
         "nom": "Vault",
-        "couleur": "dorée",
+        "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": False, "right": False},
         "loot": {
-            "garanti": ["Pièce d'Or"] * 15,  # Plus de pièces
-            "aleatoire": [("Gemme", 0.5)],
+            "garanti": ["Pièce d'Or"] * 15, 
+            "aleatoire": [("Gemme", 0.6)],
             "magasin": [
-                {"item": "Pelle", "prix": 10},           # Prix fortement réduits
+                {"item": "Pelle", "prix": 10}, 
                 {"item": "Marteau", "prix": 12},
                 {"item": "Kit de Crochetage", "prix": 15},
                 {"item": "Détecteur de Métaux", "prix": 20},
@@ -224,7 +216,7 @@ catalogue_pieces = [
         "couleur": "bleue",
         "portes": {"up": False, "down": True, "left": True, "right": True},
         "loot": {
-            "garanti": [],  
+            "garanti": [], 
             "aleatoire": [] 
         },
         "endroits_creuser": 0,
@@ -234,57 +226,56 @@ catalogue_pieces = [
     },
     
     {
-        "nom": "Upper Hall",
-        "couleur": "bleue",
+        "nom": "Great Hall",
+        "couleur": "orange",
         "portes": {"up": True, "down": True, "left": True, "right": True},
         "loot": {
-            "garanti": ["Pièce d'Or"],
-            "aleatoire": [("Gemme", 0.3)]
+            "garanti": ["Pièce d'Or", "Gemme"], 
+            "aleatoire": [("Gemme", 0.3), ("Clé", 0.6)]
         },
-        "image" : "Images/upperhall.webp",
+        "image" : "Images/greathall.png",
         "cout_gemmes": 1,
         "rarete": 1
     },
     {
         "nom": "Gallery",
-        "couleur": "blanche",
-        "portes": {"up": True, "down": True, "left": False, "right": True},
+        "couleur": "bleue",
+        "portes": {"up": True, "down": True, "left": False, "right": False},
         "loot": {
-            "garanti": [],
-            "aleatoire": [("Pièce d'Or", 0.5), ("Clé", 0.2)]
+            "garanti": ["Pièce d'Or", "Pièce d'Or", "Gemme"],
+            "aleatoire": [("Pièce d'Or", 0.5), ("Clé", 0.4)]
         },
-        "image" : "Images/gallery.webp",
+        "image" : "Images/gallery.png",
         "cout_gemmes": 1,
         "rarete": 1
     },
     {
-        "nom": "Tower Room",
-        "couleur": "violette",
-        "portes": {"up": True, "down": True, "left": True, "right": False},
+        "nom": "Hallway",
+        "couleur": "orange",
+        "portes": {"up": False, "down": True, "left": True, "right": True}, 
         "loot": {
-            "garanti": ["Gemme"],
-            "aleatoire": [("Potion", 0.2)]
+            "garanti": ["Gemme", "Gemme", "Gemme"],
+            "aleatoire": [("Potion", 0.2), ("Clé", 0.05)]
         },
-        "image" : "Images/towerroom.webp",
+        "image" : "Images/hallway.png",
         "cout_gemmes": 2,
         "rarete": 2
     },
     {
-        "nom": "Sky Chamber",
-        "couleur": "dorée",
+        "nom": "Archives",
+        "couleur": "rouge",
         "portes": {"up": True, "down": True, "left": True, "right": True},
         "loot": {
-            "garanti": [],
-            "aleatoire": [("Clé", 0.5)],
+            "garanti": ["Gemme"],
+            "aleatoire": [("Clé", 0.5), ("Gemme", 0.5)],
             "magasin": [
-                {"item": "Gemmes", "prix": 5},
-                {"item": "Potion", "prix": 8}
+                {"item": "Gemme", "prix": 5},
+                {"item": "Gâteau", "prix": 8}
             ]
         },
-        "image" : "Images/skychamber.webp",
+        "endroits_creuser": 0,
+        "image" : "Images/archives.png",
         "cout_gemmes": 2,
         "rarete": 2
     }
 ]
-
-

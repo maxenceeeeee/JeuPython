@@ -356,7 +356,7 @@ class Jeu:
 
     
     def _generer_et_ramasser_butin(self, piece: Piece):
-        objets_trouves = []
+        objets_trouvés = []
         
         detecteur_actif = self.joueur.inventaire.detecteur_actif
         patte_lapin_active = self.joueur.inventaire.patte_lapin_active
@@ -367,7 +367,7 @@ class Jeu:
             return
 
         for nom_item in loot_data.get("garanti", []):
-            objets_trouves.append(nom_item)
+            objets_trouvés.append(nom_item)
             
         for nom_item, proba_base in loot_data.get("aleatoire", []):
             proba_modifiee = proba_base
@@ -379,28 +379,28 @@ class Jeu:
                 proba_modifiee = min(1.0, proba_modifiee + 0.15) 
 
             if random.random() < proba_modifiee:
-                objets_trouves.append(nom_item)
+                objets_trouvés.append(nom_item)
                 
         if piece.couleur == "verte":
             proba_gemme = 0.2
             if patte_lapin_active: proba_gemme = min(1.0, proba_gemme + 0.15)
             if random.random() < proba_gemme:
-                objets_trouves.append("Gemme")
+                objets_trouvés.append("Gemme")
         
         elif piece.couleur == "violette":
             proba_pomme = 0.3
             if patte_lapin_active: proba_pomme = min(1.0, proba_pomme + 0.15)
             if random.random() < proba_pomme:
-                objets_trouves.append("Pomme")
+                objets_trouvés.append("Pomme")
 
-        if not objets_trouves:
+        if not objets_trouvés:
             self.message_statut += " | Aucun objet trouvé ici."
             return
 
         message_loot = " | Vous trouvez : "
         items_str_list = []
         
-        for nom_item in objets_trouves:
+        for nom_item in objets_trouvés:
             objet_instance = self._instancier_objet(nom_item)
             if objet_instance:
                 self.joueur.inventaire.ramasser_objet(objet_instance, self.joueur)
@@ -526,14 +526,14 @@ class Jeu:
                     self.game_over = True
                     return
 
-                # Défaite par manque de gemmes/dés après tirage
-                peut_payer = any(p.cout_gemmes <= self.joueur.inventaire.gemmes for p in self.pieces_proposees)
-                a_de = self.joueur.inventaire.des > 0
+                # Défaite par manque de gemmes/dés après tirage (SUPPRIMÉ)
+                # peut_payer = any(p.cout_gemmes <= self.joueur.inventaire.gemmes for p in self.pieces_proposees)
+                # a_de = self.joueur.inventaire.des > 0
                 
-                if not peut_payer and not a_de:
-                    self.message_statut = "DEFAITE : Aucune pièce abordable et pas de Dé pour relancer. Jeu terminé."
-                    self.game_over = True
-                    return
+                # if not peut_payer and not a_de:
+                #     self.message_statut = "DEFAITE : Aucune pièce abordable et pas de Dé pour relancer. Jeu terminé."
+                #     self.game_over = True
+                #     return
                 
                 self.nouvelle_piece_coords = (nouvelle_ligne, nouvelle_colonne)
                 self.direction_mouvement = direction
@@ -596,16 +596,6 @@ class Jeu:
                 self.message_statut = "DEFAITE : La relance n'a trouvé aucune pièce valide. Jeu terminé."
                 self.game_over = True
                 return
-
-            # Défaite par manque de gemmes/dés après relance
-            peut_payer = any(p.cout_gemmes <= self.joueur.inventaire.gemmes for p in self.pieces_proposees)
-            a_de = self.joueur.inventaire.des > 0
-            
-            if not peut_payer and not a_de:
-                self.message_statut = "DEFAITE : Vous ne pouvez pas payer de pièce et vous n'avez plus de Dé. Jeu terminé."
-                self.game_over = True
-                return
-            
         else:
             self.message_statut = "Vous n'avez pas de Dés !"
 

@@ -56,21 +56,18 @@ class Manoir:
                 piece_entree.portes_objets[direction] = Porte(niveau=0, ouverte=True)
 
     def _placer_piece_finale(self):
-        """
-        Trouve l'Antechamber, la crée et la place sur la grille (0, 2).
-        """
         pos_ligne, pos_col = 0, 2
         data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antechamber"), None)
         piece_finale = Piece(**data_finale)
         piece_finale.charger_image("Images.zip")
         self.grille[pos_ligne][pos_col] = piece_finale
 
-        # Création des portes pour la pièce finale
         for direction, existe in piece_finale.portes.items():
             if existe:
                 niveau = Porte.generer_niveau_verrouillage(pos_ligne, self.lignes)
                 if pos_ligne == 0:
-                    niveau = 2
+                    niveau = 2  # Double verrouillage pour la pièce finale
+                # Porte FERMÉE par défaut, quelle que soit son niveau
                 piece_finale.portes_objets[direction] = Porte(niveau=niveau, ouverte=False)
 
     def get_piece_at(self, ligne: int, colonne: int) -> Piece | None:
@@ -82,22 +79,14 @@ class Manoir:
         return None
 
     def placer_piece(self, piece: Piece, ligne: int, colonne: int,
-                     ligne_entree: int, col_entree: int, direction_mouvement: str):
-        """
-        Place une pièce choisie sur la grille et crée ses portes.
-        Met à jour la porte de la pièce précédente et synchronise les portes opposées.
-        """
+                    ligne_entree: int, col_entree: int, direction_mouvement: str):
         if not (0 <= ligne < self.lignes and 0 <= colonne < self.colonnes):
-            return  # Placement hors grille
+            return
 
-        # Placer la pièce
         self.grille[ligne][colonne] = piece
-
-        # Retirer de la pioche si nécessaire
         if piece in self.pioche:
             self.pioche.remove(piece)
 
-        # Déterminer la porte d'entrée (opposée au mouvement)
         directions_opposees = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}
         porte_entree_nom = directions_opposees[direction_mouvement]
 
@@ -105,10 +94,12 @@ class Manoir:
         for direction, existe in piece.portes.items():
             if existe:
                 if direction == porte_entree_nom:
+                    # Porte d'entrée : OUVERTE et déverrouillée
                     porte = Porte(niveau=0, ouverte=True)
                 else:
+                    # CORRECTION : Autres portes - générer niveau mais TOUJOURS FERMÉES au départ
                     niveau = Porte.generer_niveau_verrouillage(ligne, self.lignes)
-                    porte = Porte(niveau=niveau, ouverte=False)
+                    porte = Porte(niveau=niveau, ouverte=False)  # ← IMPORTANT : ouverte=False
                 piece.portes_objets[direction] = porte
 
         # Synchroniser la porte de la pièce précédente
@@ -116,7 +107,6 @@ class Manoir:
         if piece_precedente:
             if direction_mouvement in piece_precedente.portes_objets:
                 piece_precedente.portes_objets[direction_mouvement].ouverte = True
-            # S'assurer que la porte d'entrée de la nouvelle pièce est bien ouverte
             if porte_entree_nom in piece.portes_objets:
                 piece.portes_objets[porte_entree_nom].ouverte = True
 
@@ -133,7 +123,7 @@ class Manoir:
         candidates = []
 
         # Fonction pour calculer le poids selon la rareté
-        def get_poids(piece):
+        def poids_rarete(piece):
             return 1 / (3 ** max(piece.rarete, 0))
 
         # Filtrer la pioche pour ne garder que les pièces avec la porte requise
@@ -147,7 +137,7 @@ class Manoir:
 
         # Choisir au moins une pièce gratuite compatible (si disponible)
         if pieces_gratuites:
-            poids_gratuites = [get_poids(p) for p in pieces_gratuites]
+            poids_gratuites = [poids_rarete(p) for p in pieces_gratuites]
             choix_gratuit = random.choices(pieces_gratuites, weights=poids_gratuites, k=1)[0]
             candidates.append(choix_gratuit)
 
@@ -155,21 +145,18 @@ class Manoir:
         pioche_restante_compatible = [p for p in pioche_compatible if p not in candidates]
 
         while len(candidates) < 3 and pioche_restante_compatible:
-            poids_restants = [get_poids(p) for p in pioche_restante_compatible]
+            poids_restants = [poids_rarete(p) for p in pioche_restante_compatible]
             choix = random.choices(pioche_restante_compatible, weights=poids_restants, k=1)[0]
             candidates.append(choix)
             pioche_restante_compatible.remove(choix)
 
         # Configuration des portes pour chaque candidate
         for p in candidates:
-            # Porte d'entrée (niveau 0, ouverte)
             p.portes_objets[porte_requise] = Porte(niveau=0, ouverte=True)
-
-            # Générer les autres portes verrouillées
             for dir, exists in p.portes.items():
                 if exists and dir != porte_requise and dir not in p.portes_objets:
                     niveau = Porte.generer_niveau_verrouillage(ligne_nouvelle, self.lignes)
-                    p.portes_objets[dir] = Porte(niveau=niveau, ouverte=False)
+                    p.portes_objets[dir] = Porte(niveau=niveau, ouverte=(niveau == 0))
 
         random.shuffle(candidates)
         return candidates
