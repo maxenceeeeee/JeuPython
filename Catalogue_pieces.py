@@ -277,5 +277,61 @@ catalogue_pieces = [
         "image" : "Images/archives.png",
         "cout_gemmes": 2,
         "rarete": 2
+    },
+    {"nom": "Workshop",
+        "couleur": "bleue",
+        "portes": {"up": True, "down": True, "left": False, "right": False},
+        "loot": {
+            "garanti": ["Marteau", "Clé"], 
+            "aleatoire": [("Pièce d'Or", 0.6), ("Pelle", 0.4), ("Kit de Crochetage", 0.2)]
+        },
+        "endroits_creuser": 1,
+        "image": "Images/workshop.webp",
+        "cout_gemmes": 0,
+        "rarete": 1
+    },
+    {
+        "nom": "Foyer",
+        "couleur": "brune",
+        "portes": {"up": True, "down": True, "left": False, "right": False},
+        "loot": {
+            "garanti": ["Pièce d'Or", "Gemme"], 
+            "aleatoire": [("Gemme", 0.4), ("Clé", 0.3), ("Dé", 0.2)]
+        },
+        "endroits_creuser": 0,
+        "image": "Images/foyer.webp",
+        "cout_gemmes": 2,
+        "rarete": 2
+    },
+    {
+        "nom": "Veranda",
+        "couleur": "verte",
+        "portes": {"up": True, "down": True, "left": False, "right": False},
+        "loot": {
+            "garanti": ["Gemme", "Pomme"], 
+            "aleatoire": [("Banane", 0.4), ("Clé", 0.2), ("Repas", 0.3)]
+        },
+        "endroits_creuser": 1,
+        "image": "Images/veranda.webp",
+        "cout_gemmes": 2,
+        "rarete": 2
+    },
+    {
+        "nom": "Showroom",
+        "couleur": "dorée",
+        "portes": {"up": True, "down": True, "left": False, "right": False},
+        "loot": {
+            "garanti": ["Pièce d'Or", "Pièce d'Or", "Gemme", "Gemme"], 
+            "aleatoire": [("Dé", 0.3), ("Clé", 0.5)],
+            "magasin": [
+                {"item": "Détecteur de Métaux", "prix": 18},
+                {"item": "Patte de Lapin", "prix": 25},
+                {"item": "Gâteau", "prix": 10}
+            ]
+        },
+        "endroits_creuser": 0,
+        "image": "Images/showroom.webp",
+        "cout_gemmes": 2,
+        "rarete": 3
     }
 ]
