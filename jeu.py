@@ -87,6 +87,9 @@ class Jeu:
         self.magasin_items = []
 
         self.creusage_disponible = False
+        
+        self.porte_a_debloquer = None 
+        self.porte_direction = None
 
         self.font_petit = pygame.font.Font(None, 30)
         self.font_moyen = pygame.font.Font(None, 35)
@@ -150,10 +153,10 @@ class Jeu:
         dicto_inventaire = {
             'PERMANENT': [
                 ("Kit de Crochetage", self.joueur.inventaire.a_objet_permanent("Kit de Crochetage")),
-                ("Patte de Lapin", self.joueur.inventaire.a_objet_permanent("Patte de Lapin")),
+                ("Patte de Lapin", self.joueur.inventaire.patte_lapin_active), # Affichage basé sur l'état actif
                 ("Pelle", self.joueur.inventaire.a_objet_permanent("Pelle")),
                 ("Marteau", self.joueur.inventaire.a_objet_permanent("Marteau")),
-                ("Détecteur de Métaux", self.joueur.inventaire.a_objet_permanent("Détecteur de Métaux")),
+                ("Détecteur de Métaux", self.joueur.inventaire.detecteur_actif), # Affichage basé sur l'état actif
             ],
             'CONSOMMABLE': [
                 ("Pas", self.joueur.inventaire.pas),
@@ -255,7 +258,7 @@ class Jeu:
         overlay.fill((0, 0, 0, 200))
         self.screen.blit(overlay, (0, 0))
 
-        titre_surface = self.font_titre.render("CHOISISSEZ UNE PIECE", True, (255, 255, 255))
+        titre_surface = self.font_titre.render("CHOISISSEZ UNE PIECE ou A pour Quitter", True, (255, 255, 255))
         titre_rect = titre_surface.get_rect(center=(affichage_largeur // 2, 100))
         self.screen.blit(titre_surface, titre_rect)
 
@@ -268,7 +271,7 @@ class Jeu:
             x_carte = start_x + i * (200 + 50)
             carte_rect = pygame.Rect(x_carte, y_carte, 200, 300)
             
-            couleurs = {"bleue": (0, 0, 100), "dorée": (100, 80, 0), "verte": (0, 80, 0), "violette": (80, 0, 80), "grise": (50, 50, 50), "blanche": (100, 100, 100), "brune": (70, 30, 0)}
+            couleurs = {"bleue": (0, 0, 100), "dorée": (100, 80, 0), "verte": (0, 80, 0), "violette": (80, 0, 80), "grise": (50, 50, 50), "blanche": (100, 100, 100), "brune": (70, 30, 0), "orange": (255, 140, 0), "rouge": (150, 0, 0)} # Ajout de couleurs
             couleur_fond = couleurs.get(piece.couleur, (30, 30, 30))
             pygame.draw.rect(self.screen, couleur_fond, carte_rect)
             pygame.draw.rect(self.screen, (255, 255, 255), carte_rect, 2)
@@ -363,7 +366,7 @@ class Jeu:
 
         loot_data = piece.loot
         if not loot_data:
-            self.message_statut += " | Aucun objet ici."
+            self.message_statut += " | Aucun objet trouvé"
             return
 
         for nom_item in loot_data.get("garanti", []):
@@ -394,10 +397,10 @@ class Jeu:
                 objets_trouvés.append("Pomme")
 
         if not objets_trouvés:
-            self.message_statut += " | Aucun objet trouvé ici."
+            self.message_statut += " | Aucun objet trouvé"
             return
 
-        message_loot = " | Vous trouvez : "
+        message_loot = " | Trouvé : "
         items_str_list = []
         
         for nom_item in objets_trouvés:
@@ -473,12 +476,67 @@ class Jeu:
             
             self._mettre_a_jour_creusage_disponible()
         else:
-            self.message_statut = "Aucun endroit où creuser ici."
+            self.message_statut = "Impossible de creuser ici ! "
+            
+    def tenter_deblocage(self, choix: int):
+        """Tente de déverrouiller la porte en attente avec le choix d'outil/clé."""
+        porte = self.porte_a_debloquer
+        
+        if not porte or porte.niveau == 0:
+            self.etat_jeu = "Deplacement"
+            return
+            
+        succes = False
+        
+        # Cas Niveau 2 : Clé obligatoire (choix sera toujours 1 ou 2)
+        if porte.niveau == 2:
+            if self.joueur.inventaire.depenser_cles(1):
+                porte.ouverte = True
+                self.message_statut = "Porte débloquée : - 1 Clé."
+                succes = True
+            else:
+                self.message_statut = "Annulation du déblocage"
+                
+        elif porte.niveau == 1:
+            possede_kit = self.joueur.inventaire.a_objet_permanent("Kit de Crochetage")
+            
+            if choix == 1 and possede_kit:
+                porte.ouverte = True
+                self.message_statut = "Porte débloquée : Kit de Crochetage utilisé."
+                succes = True
+            
+            elif (choix == 2 and possede_kit and self.joueur.inventaire.depenser_cles(1)) or \
+                 (choix == 1 and not possede_kit and self.joueur.inventaire.depenser_cles(1)):
+                porte.ouverte = True
+                self.message_statut = "Porte débloquée : - 1 Clé."
+                succes = True
+            else:
+                self.message_statut = "Déblocage impossible"
+
+        if succes:
+            # Si le déblocage est réussi, relancer la méthode de déplacement 
+            self.etat_jeu = "Deplacement"
+            self.deplacement(self.porte_direction) 
+            self.porte_a_debloquer = None
+            self.porte_direction = None
+        else:
+            self.etat_jeu = "Deplacement"
+            self.porte_a_debloquer = None
+            self.porte_direction = None
 
     def deplacement(self, direction):
-        if self.etat_jeu not in ["Deplacement", "Magasin"]: 
-            self.message_statut = "Veuillez choisir une pièce (Touches 1, 2, 3)"
+        if self.etat_jeu not in ["Deplacement", "Magasin", "Selection pieces"]: 
+            if self.etat_jeu != "Selection pieces":
+                 self.message_statut = "Veuillez choisir une pièce (Touches 1, 2, 3)"
             return
+        
+        # NOUVEAU: Si on est en Selection pieces et qu'on fait un mouvement, 
+        # on veut juste sortir de l'écran de sélection.
+        if self.etat_jeu == "Selection pieces":
+            self.etat_jeu = "Deplacement"
+            self.message_statut = "Tirage mis en pause. Re-sélectionnez la porte pour y revenir, ou ZQSD pour vous déplacer ailleurs."
+            return
+
         if self.etat_jeu == "Magasin":
             self.etat_jeu = "Deplacement"
             self.message_statut = "Vous quittez la boutique."
@@ -498,21 +556,36 @@ class Jeu:
             return
         
         if porte_obj.ouvrir(self.joueur):
+            
+            # Si la porte est verrouillée MAIS peut être ouverte (passage à l'état de déblocage)
+            if porte_obj.niveau > 0 and not porte_obj.ouverte:
+                self.etat_jeu = "Deblocage Porte"
+                self.porte_a_debloquer = porte_obj
+                self.porte_direction = direction
+                
+                msg = f"Porte Verrouillée (Niv {porte_obj.niveau}) ! "
+                if porte_obj.niveau == 2:
+                    msg += "Utilisez la touche 1 pour dépenser 1 CLÉ. A pour quitter."
+                elif porte_obj.niveau == 1:
+                    if self.joueur.inventaire.a_objet_permanent("Kit de Crochetage"):
+                        msg += "Utilisez la touche 1 pour utiliser le KIT de Crochetage, ou touche 2 pour dépenser 1 CLÉ. A pour quitter."
+                    elif self.joueur.inventaire.cles > 0:
+                        msg += "Utilisez la touche 1 pour dépenser 1 CLÉ. A pour quitter."
+                    
+                self.message_statut = msg
+                return # Arrêter le déplacement ici
+            
+            # Si la case est VIDE, vérifie si on a déjà tiré des pièces
             destination_piece = self.manoir.get_piece_at(nouvelle_ligne, nouvelle_colonne)
-
-            if destination_piece:
-                if self.joueur.deplacer_vers(nouvelle_ligne, nouvelle_colonne):
-                    self.message_statut = f"Vous entrez dans {destination_piece.nom}"
-                    
-                    self._mettre_a_jour_creusage_disponible()
-                    
-                    if destination_piece.nom in ["Antechamber", "Antichambre"]:
-                        self.victoire = True
-                    elif destination_piece.couleur == "dorée":
-                        self._entrer_magasin(destination_piece)
-                else:
-                    self.game_over = True
-            else:
+            
+            if not destination_piece:
+                # Si le tirage précédent existe, on y revient
+                if (nouvelle_ligne, nouvelle_colonne) == self.nouvelle_piece_coords and self.pieces_proposees:
+                    self.etat_jeu = "Selection pieces"
+                    self.message_statut = "Retour au tirage ! Choisissez la pièce à placer (1, 2, 3). Coût en GEMMES."
+                    return
+                
+                # Sinon, on tire une nouvelle fois
                 self.pieces_proposees = self.manoir.tirer_trois_pieces(
                     self.joueur.position_ligne,
                     self.joueur.position_colonne,
@@ -525,26 +598,41 @@ class Jeu:
                     self.message_statut = "DEFAITE : La pioche ne contient plus de pièces valides."
                     self.game_over = True
                     return
-
-                # Défaite par manque de gemmes/dés après tirage (SUPPRIMÉ)
-                # peut_payer = any(p.cout_gemmes <= self.joueur.inventaire.gemmes for p in self.pieces_proposees)
-                # a_de = self.joueur.inventaire.des > 0
-                
-                # if not peut_payer and not a_de:
-                #     self.message_statut = "DEFAITE : Aucune pièce abordable et pas de Dé pour relancer. Jeu terminé."
-                #     self.game_over = True
-                #     return
                 
                 self.nouvelle_piece_coords = (nouvelle_ligne, nouvelle_colonne)
                 self.direction_mouvement = direction
                 
                 self.etat_jeu = "Selection pieces"
-                self.message_statut = "Choisissez une pièce (1, 2, 3). Dépensez un Dé (Touche R) pour relancer."
+                self.message_statut = "La porte est ouverte ! Choisissez la pièce à placer (1, 2, 3). Coût en GEMMES."
+                
+            # Si la case a une PIECE (déplacement normal)
+            else:
+                # VÉRIFICATION DE LA PORTE DE DESTINATION (pour éviter le mur dans la pièce existante)
+                directions_opposees = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}
+                direction_opposee = directions_opposees[direction]
+                
+                porte_destination_obj = destination_piece.portes_objets.get(direction_opposee)
+                
+                if porte_destination_obj is None:
+                    self.message_statut = "Cette porte mène à un mur dans la pièce de destination."
+                    return
+                
+                if self.joueur.deplacer_vers(nouvelle_ligne, nouvelle_colonne):
+                    self.message_statut = f"Vous entrez dans {destination_piece.nom}"
+                    
+                    self._mettre_a_jour_creusage_disponible()
+                    
+                    if destination_piece.nom in ["Antechamber", "Antichambre"]:
+                        self.victoire = True
+                    elif destination_piece.couleur == "dorée":
+                        self._entrer_magasin(destination_piece)
+                else:
+                    self.game_over = True
         else:
             if porte_obj.niveau == 1:
-                self.message_statut = "Porte verrouillée (Niv 1). Clé ou Kit nécessaire."
+                self.message_statut = "Porte verrouillée (Niv 1). Clé ou Kit nécessaire. (Manquant)"
             elif porte_obj.niveau == 2:
-                self.message_statut = "Porte verrouillée (Niv 2). Clé nécessaire."
+                self.message_statut = "Porte verrouillée (Niv 2). Clé nécessaire. (Manquant)"
 
     def selectionner_piece(self, index_choix: int):
         if not (0 <= index_choix < len(self.pieces_proposees)):
@@ -610,6 +698,15 @@ class Jeu:
                     if event.key == pygame.K_RETURN:
                         self.flag_en_cours = False
                 
+                elif self.etat_jeu == "Deblocage Porte":
+                    if event.key == pygame.K_1 or event.key == pygame.K_KP_1:
+                        self.tenter_deblocage(choix=1)
+                    elif event.key == pygame.K_2 or event.key == pygame.K_KP_2:
+                        self.tenter_deblocage(choix=2)
+                    elif event.key == pygame.K_a:
+                        self.etat_jeu = "Deplacement"
+                        self.message_statut = "Déblocage annulé."
+                
                 elif self.etat_jeu == "Deplacement":
                     if event.key == pygame.K_z:
                         self.deplacement('up')
@@ -641,6 +738,10 @@ class Jeu:
                         self.selectionner_piece(2)
                     elif event.key == pygame.K_r:
                         self.utiliser_de()
+                    # NOUVEAU: Quitter le tirage
+                    elif event.key == pygame.K_a: 
+                        self.etat_jeu = "Deplacement"
+                        self.message_statut = "Tirage mis en pause. Re-sélectionnez la porte pour y revenir."
                         
                 elif self.etat_jeu == "Magasin":
                     if event.key == pygame.K_1 or event.key == pygame.K_KP_1:

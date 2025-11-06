@@ -1,6 +1,5 @@
 import random
-from joueur import *
-from inventaire import *
+# from joueur import * # from inventaire import *
 
 
 class Porte:
@@ -36,36 +35,24 @@ class Porte:
         return False
 
     def ouvrir(self, joueur) -> bool:
-        """Tente d'ouvrir la porte avec les ressources nécessaires du joueur."""
+        """
+        [MODIFIÉ] Tente d'ouvrir la porte. Retourne True si déjà ouverte ou si Niv 0.
+        Si la porte est verrouillée (Niv 1 ou 2), retourne True si peut_ouvrir est True.
+        """
         # Si la porte est déjà ouverte, rien à faire
         if self.ouverte:
             return True
 
-        # Si le joueur ne peut pas ouvrir (manque de clés ou d'outil)
-        if not self.peut_ouvrir(joueur):
-            return False
+        # Niveau 0 : ouverture immédiate
+        if self.niveau == 0:
+            self.ouverte = True
+            return True
 
-        # Cas 1 : porte à double tour = clé obligatoire
-        if self.niveau == 2:
-            if joueur.inventaire.depenser_cles(1):
-                self.ouverte = True
-                return True
-            return False
-
-        # Cas 2 : porte verrouillée (niveau 1)
-        if self.niveau == 1:
-            if joueur.inventaire.a_objet_permanent("Kit de Crochetage"):
-                self.ouverte = True
-                return True
-            else:
-                if joueur.inventaire.depenser_cles(1):
-                    self.ouverte = True
-                    return True
-                return False
-
-        # Cas 3 : porte déverrouillée (niveau 0)
-        self.ouverte = True
-        return True
+        # Niveaux 1 et 2 : on ne dépense rien, on vérifie si le joueur est *prêt* à payer
+        if self.niveau > 0:
+            return self.peut_ouvrir(joueur)
+            
+        return False  # Ne devrait jamais arriver
 
     @staticmethod
     def generer_niveau_verrouillage(ligne: int, hauteur_grille: int) -> int:
@@ -90,9 +77,12 @@ class Porte:
         proba = random.random()
 
         # Ajustement de la probabilité selon la progression
-        if proba < (progression * 0.4):
+        # ANCIENNES PROBABILITÉS: 0.4 pour Niv 2, 0.8 pour Niv 1 (si progression = 1)
+        # NOUVELLES PROBABILITÉS (Plus agressives):
+        
+        if proba < (progression * 0.5):  # Augmenté de 0.4 -> 0.5 (Plus de Niv 2)
             return 2
-        elif proba < (progression * 0.8):
+        elif proba < (progression * 0.85):  # Augmenté de 0.8 -> 0.85 (Plus de Niv 1, moins de Niv 0)
             return 1
         else:
             return 0
