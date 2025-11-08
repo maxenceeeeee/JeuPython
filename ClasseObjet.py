@@ -6,32 +6,40 @@ import random
 class Objet:
     """
     Classe de base pour tous les objets du jeu (consommables ou permanents).
+    
+    Attributes:
+        nom (str): Nom de l'objet affiché à l'écran.
+        description (str): texte décrivant l'effet de l'objet
+        type_objet (str) : type de l'objet (consommable ou permanent)
+        rarete (int) : indique la rareté de l'objet de 0 (très commun) à 3 (épique/légendaire) 
     """
     def __init__(self, nom: str, description: str, type_objet: str, rarete: int):
-        # nom de l'objet quon va afficher à lécran
         self.nom = nom
-        # décrit leffet de lobjet
         self.description = description
-        # type : soit consommable soit permanent
         self.type_objet = type_objet 
-        # rareté : 0 (Très Commun) à 3 (Épique/Légendaire)
         self.rarete = rarete         
 
     def __str__(self):
+        """Retourne une réprésentation lisible de l'objet """
         return f"{self.nom} ({self.type_objet}, Rareté: {self.rarete})"
 
     def utiliser(self, joueur):
         """
         Méthode à implémenter dans les sous-classes. 
-        Applique leffet de lobjet sur le joueur (ou le manoir).
-        Retourne True si lobjet est consommé, False sinon.
+        Applique l'effet de l'objet sur le joueur (ou le manoir).
+        
+        Args:
+            joueur: Instance du joueur sur laquelle appliquer l'effet
+        
+        Returns:
+            bool: True si l'objet est consommé après usage, False sinon.
         """
         raise NotImplementedError("La méthode 'utiliser' doit être implémentée par les sous-classes.")
 
 
 class ObjetConsommable(Objet):
     """
-    Classe de base pour tous les objets qui sont retirés de linventaire 
+    Classe de base pour tous les objets qui sont retirés de l'inventaire 
     après utilisation (nourriture, ressources, potions, etc.).
     """
     def __init__(self, nom: str, description: str, rarete: int):
@@ -41,46 +49,66 @@ class ObjetConsommable(Objet):
 
 
 class Nourriture(ObjetConsommable): 
-    """Classe de base pour tous les objets redonnant des pas dans le manoir."""
+    """
+    Classe de base pour tous les objets redonnant des pas dans le manoir.
+    
+    Attributes:
+        pas_rendus (int): Nombre de pas restitués au joueur lors de la consommation.
+    
+    """
     def __init__(self, nom: str, pas_rendus: int, rarete: int):
         description = f"Redonne {pas_rendus} pas."
         super().__init__(nom, description, rarete) # On appelle le constructeur de ObjetConsommable
         self.pas_rendus = pas_rendus
 
     def utiliser(self, joueur):
-        """Augmente les pas du joueur et consomme lobjet."""
+        """ Augmente les pas du joueur et consomme l'objet. """
         joueur.inventaire.pas += self.pas_rendus
         print(f"{self.nom} consommé : +{self.pas_rendus} pas.")
         return True # L'objet est consommé
 
 class Pomme(Nourriture):
+    """Objet commun redonnant 2 pas """
     def __init__(self):
         super().__init__("Pomme", 2, 0) 
 
 class Banane(Nourriture):
+    """Objet commun redonnant 3 pas """
     def __init__(self):
-        super().__init__("Banane", 3, 0)  # 3 pas comme dans le sujet
+        super().__init__("Banane", 3, 0)  
 
 class Gateau(Nourriture):
+    """Objet peu commun redonnat 10 pas."""
     def __init__(self):
-        super().__init__("Gâteau", 10, 1)  # 10 pas comme dans le sujet
-
+        super().__init__("Gâteau", 10, 1)  
 class Sandwich(Nourriture):
+    """Objet peu commmun redonnant 15 pas."""
     def __init__(self):
-        super().__init__("Sandwich", 15, 1)  # 15 pas comme dans le sujet
-
+        super().__init__("Sandwich", 15, 1)  
 class Repas(Nourriture):
+    """Objet rare redonnant 25 pas. """
     def __init__(self):
-        super().__init__("Repas", 25, 2)  # 25 pas comme dans le sujet
-
+        super().__init__("Repas", 25, 2)
 
 class Ressource(ObjetConsommable):
+    """ 
+    Classe générique pour les ressources consommables ajoutées à l'inventaire.
+    Attributes:
+        quantite (int): Nombre d'unités de ressources ramassées.
+    """
     def __init__(self, nom : str, rarete : int, quantite : int = 1): 
         description = f"{quantite} {nom}(s) ajouté(s) à l'inventaire."
         super().__init__(nom, description, rarete)
         self.quantite = quantite
 
     def utiliser(self, joueur):
+        """
+        Ajoute la ressource correspondante à l'inventaire du joueur.
+        Args:
+            joueur: le joueur qui ramasse la ressource.
+        Returns:
+            bool: True si la ressource est ajouté avec succès.
+        """
         if self.nom == "Clé":
             joueur.inventaire.cles += self.quantite
         elif self.nom == "Pièce d'Or":
@@ -96,20 +124,24 @@ class Ressource(ObjetConsommable):
         return True
 
 class Cle(Ressource):
+    """Objet commun permettant d'ouvrir des coffres ou portes verrouillées."""
     def __init__(self):
-        super().__init__("Clé", 0)  # Commun
+        super().__init__("Clé", 0)
 
 class PieceDor(Ressource):
+    """Objet commun représentant la monnaie du jeu."""
     def __init__(self):
-        super().__init__("Pièce d'Or", 0)  # Commun
+        super().__init__("Pièce d'Or", 0)
         
 class Gemme(Ressource):
+    """Objet peu commun utilisé comme monnaie spéciale."""
     def __init__(self, quantite : int = 1):
-        super().__init__("Gemme", 1, quantite)  # Peu commun
+        super().__init__("Gemme", 1, quantite)  
         
 class De(Ressource):
+    """Objet peu commun permettant d'activer certains effets aléatoires."""
     def __init__(self):
-        super().__init__("Dé", 1)  # Peu commun
+        super().__init__("Dé", 1)
 
 class ObjetPermanent(Objet):
     """Classe de base pour tous les objets permanents."""
@@ -118,11 +150,14 @@ class ObjetPermanent(Objet):
 
     def utiliser(self, joueur):
         """
-        Les objets permanents NE SONT PAS consommés après utilisation.
-        Retourne False pour indiquer qu'ils DOIVENT rester dans l'inventaire.
+        Active l'effet de l'objet sans le retirer de l'inventaire.
+        Args:
+            joueur: Le joueur qui active l'objet.
+        Returns:
+            bool: False car l'objet reste dans l'inventaire.
         """
         print(f"Objet permanent activé : {self.nom}. Effet actif.")
-        return False  # L'objet N'EST PAS consommé/retiré de l'inventaire
+        return False
 
 class Pelle(ObjetPermanent):
     def __init__(self):
@@ -170,6 +205,7 @@ class PatteDeLapin(ObjetPermanent):
         joueur.inventaire.patte_lapin_active = True
         print("Patte de lapin activée - effet permanent.")
         return False  # Reste dans l'inventaire
+
 
 
 # ITEM FACTORY
