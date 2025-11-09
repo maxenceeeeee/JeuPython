@@ -3,7 +3,7 @@
 pip install pygame
 
 
-#Bibliothèques à utiliser
+#Bibliothèques et imports utilisés 
 
 import pygame 
 from joueur import Joueur
