@@ -58,3 +58,5 @@ Les portes peuvent être verrouillées (Niveau 1 ou 2).
 Ouvrir une porte verrouillée consomme 1 Clé (🔑).
 
 Si vous possédez le Kit de Crochetage, vous pouvez ouvrir les portes de Niveau 1 sans dépenser de clé. Le kit ne fonctionne pas sur le Niveau 2.
+
+# Bon jeu !
