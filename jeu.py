@@ -8,7 +8,6 @@ import os
 from ClasseObjet import OBJET_MAP
 import random
 
-# CONSTANTES D'AFFICHAGE
 colonnes_jeu = 5
 lignes_jeu = 9 
 
@@ -464,8 +463,7 @@ class Jeu:
         
         if piece_actuelle:
             patte_lapin_active = self.joueur.inventaire.patte_lapin_active
-            resultat = piece_actuelle.creuser(patte_lapin_active)
-            
+            resultat = piece_actuelle.creuser(patte_lapin_active)         
             if resultat['success']:
                 objet_instance = self._instancier_objet(resultat['objet'])
                 if objet_instance:

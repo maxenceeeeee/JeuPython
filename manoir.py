@@ -3,7 +3,9 @@ from ClassePiece import Piece
 from ClassePorte import Porte
 from Catalogue_pieces import catalogue_pieces
 from typing import List
-
+from zipfile import ZipFile
+from io import BytesIO
+import os
 
 class Manoir:
     """
@@ -47,15 +49,33 @@ class Manoir:
         
         Returns:
             List[Piece]: Liste des objets Piece prêts à être tirés.
-        
         """
         pioche = []
         for data_piece in catalogue_pieces:
             if data_piece["nom"] not in ["Entrance Hall", "Antechamber"]:
-                # Convertit le dictionnaire en objet Piece
-                piece = Piece(**data_piece)
-                piece.charger_image("Images.zip")
-                pioche.append(piece)
+                piece_template = Piece(**data_piece)
+                
+                # Détermine combien de copies ajouter à la pioche
+                if piece_template.rarete == 0:
+                    copies = 4 
+                elif piece_template.rarete == 1:
+                    copies = 3 
+                elif piece_template.rarete == 2:
+                    copies = 2
+                elif piece_template.rarete == 3:
+                    copies = 1
+                else:
+                    copies = 1
+                
+                for _ in range(copies):
+                    # Cloner l'objet Piece pour s'assurer qu'ils sont indépendants
+                    piece = Piece(**data_piece)
+                    try:
+                        piece.charger_image("Images.zip") 
+                    except NameError:
+                        pass 
+                    pioche.append(piece)
+        
         return pioche
 
     def _placer_piece_depart(self):
@@ -66,7 +86,10 @@ class Manoir:
         pos_ligne, pos_col = 8, 2
         data_entree = next((p for p in catalogue_pieces if p["nom"] == "Entrance Hall"), None)
         piece_entree = Piece(**data_entree)
-        piece_entree.charger_image("Images.zip")
+        try:
+            piece_entree.charger_image("Images.zip")
+        except NameError:
+            pass
         self.grille[pos_ligne][pos_col] = piece_entree
 
         # Création des portes pour l'entrée
@@ -78,12 +101,15 @@ class Manoir:
         """
         Place l'Antechamber à la position (0,2) sur la grille.
         Initialise les portes comme fermées, avec un niveau de verrouillage
-        dépendant de la position.        
+        dépendant de la position.        
         """
         pos_ligne, pos_col = 0, 2
         data_finale = next((p for p in catalogue_pieces if p["nom"] == "Antechamber"), None)
         piece_finale = Piece(**data_finale)
-        piece_finale.charger_image("Images.zip")
+        try:
+            piece_finale.charger_image("Images.zip")
+        except NameError:
+            pass
         self.grille[pos_ligne][pos_col] = piece_finale
 
         for direction, existe in piece_finale.portes.items():
@@ -110,7 +136,7 @@ class Manoir:
         return None
 
     def placer_piece(self, piece: Piece, ligne: int, colonne: int,
-                    ligne_entree: int, col_entree: int, direction_mouvement: str):
+                     ligne_entree: int, col_entree: int, direction_mouvement: str):
         """
         Place une pièce sur la grille aux coordonnées données et crée ses portes.
 
@@ -123,15 +149,13 @@ class Manoir:
             direction_mouvement (str): Direction du mouvement ('up', 'down', 'left', 'right').
 
         Notes:
-            - La porte correspondant à l'entrée est ouverte et déverrouillée.
-            - Les autres portes sont générées avec un niveau de verrouillage mais fermées par défaut.
+            - La pièce n'est plus retirée de la pioche, permettant les réutilisations.
         """
         if not (0 <= ligne < self.lignes and 0 <= colonne < self.colonnes):
             return
 
         self.grille[ligne][colonne] = piece
-        if piece in self.pioche:
-            self.pioche.remove(piece)
+        # La pièce n'est plus retirée de self.pioche, elle est seulement placée dans la grille.
 
         directions_opposees = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}
         porte_entree_nom = directions_opposees[direction_mouvement]
@@ -143,9 +167,9 @@ class Manoir:
                     # Porte d'entrée : OUVERTE et déverrouillée
                     porte = Porte(niveau=0, ouverte=True)
                 else:
-                    # CORRECTION : Autres portes - générer niveau mais TOUJOURS FERMÉES au départ
+                    # Autres portes - générer niveau mais TOUJOURS FERMÉES au départ
                     niveau = Porte.generer_niveau_verrouillage(ligne, self.lignes)
-                    porte = Porte(niveau=niveau, ouverte=False)  # ← IMPORTANT : ouverte=False
+                    porte = Porte(niveau=niveau, ouverte=False)
                 piece.portes_objets[direction] = porte
 
         # Synchroniser la porte de la pièce précédente
@@ -163,57 +187,74 @@ class Manoir:
         Tire 3 pièces candidates pour le nouvel emplacement, en respectant la rareté,
         la règle de la pièce gratuite et la continuité des portes.
         
-        Args:
-            ligne_actuelle (int): Ligne de la pièce actuelle.
-            col_actuelle (int): Colonne de la pièce actuelle.
-            ligne_nouvelle (int): Ligne de la nouvelle pièce à placer.
-            col_nouvelle (int): Colonne de la nouvelle pièce à placer.
-            direction_mouvement (str): Direction depuis laquelle on entre dans la nouvelle pièce.
-
-        Returns:
-            list[Piece]: Liste de 3 pièces candidates pour le joueur (peut être < 3 si pas assez de pièces compatibles).
+        Notes: Les pièces tirées sont des copies, permettant leur réutilisation dans le pool de pioche.
         
+        Returns:
+            list[Piece]: Liste de 3 pièces candidates pour le joueur.
         """
         directions_opposees = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}
         porte_requise = directions_opposees[direction_mouvement]
 
-        candidates = []
-
-        # Fonction pour calculer le poids selon la rareté
-        def poids_rarete(piece):
-            return 1 / (3 ** max(piece.rarete, 0))
-
-        # Filtrer la pioche pour ne garder que les pièces avec la porte requise
+        # 1. Filtrer la pioche pour ne garder que les pièces avec la porte requise
         pioche_compatible = [p for p in self.pioche if p.portes.get(porte_requise, False)]
 
         if not pioche_compatible:
             return []  # Aucune pièce compatible
 
-        # Séparer gratuites et payantes
-        pieces_gratuites = [p for p in pioche_compatible if p.cout_gemmes == 0]
+        # Fonction pour calculer le poids selon la rareté
+        def poids_rarete(piece):
+            # Favorise les pièces de rareté inférieure (plus communes)
+            return 1 / (0.5** max(piece.rarete, 0)) # Modification ici (3 -> 3.5)
+        
+        poids = [poids_rarete(p) for p in pioche_compatible]
 
-        # Choisir au moins une pièce gratuite compatible (si disponible)
-        if pieces_gratuites:
-            poids_gratuites = [poids_rarete(p) for p in pieces_gratuites]
-            choix_gratuit = random.choices(pieces_gratuites, weights=poids_gratuites, k=1)[0]
-            candidates.append(choix_gratuit)
-
-        # Remplir avec les autres pièces compatibles jusqu'à 3
-        pioche_restante_compatible = [p for p in pioche_compatible if p not in candidates]
-
-        while len(candidates) < 3 and pioche_restante_compatible:
-            poids_restants = [poids_rarete(p) for p in pioche_restante_compatible]
-            choix = random.choices(pioche_restante_compatible, weights=poids_restants, k=1)[0]
-            candidates.append(choix)
-            pioche_restante_compatible.remove(choix)
-
-        # Configuration des portes pour chaque candidate
+        # 2. Tirer 3 pièces (avec remplacement car la liste est complète et autorise les doublons)
+        candidates_references = random.choices(pioche_compatible, weights=poids, k=3)
+        
+        # 3. Créer des COPIES INDÉPENDANTES des pièces tirées pour la sélection
+        candidates = []
+        for piece_ref in candidates_references:
+            # Retrouver les données d'origine (nécessaire pour garantir l'indépendance totale de l'objet)
+            data = next((p for p in catalogue_pieces if p["nom"] == piece_ref.nom), None)
+            if data:
+                new_piece = Piece(**data)
+                try:
+                    new_piece.charger_image("Images.zip")
+                except NameError:
+                    pass
+                candidates.append(new_piece)
+        
+        if not candidates:
+            # Ne devrait pas arriver si pioche_compatible n'est pas vide, mais par sécurité
+            return []
+        
+        # 4. S'assurer qu'au moins une pièce est gratuite (règle du jeu, si possible)
+        pieces_gratuites_candidates = [p for p in candidates if p.cout_gemmes == 0]
+        pioche_originale_gratuites = [p for p in pioche_compatible if p.cout_gemmes == 0]
+        
+        if not pieces_gratuites_candidates and pioche_originale_gratuites:
+            # Remplacer la pièce payante la plus chère par une gratuite
+            # Tirer une nouvelle instance de pièce gratuite compatible
+            piece_gratuite_data = random.choice(pioche_originale_gratuites)
+            piece_remplacement = Piece(**next(p for p in catalogue_pieces if p["nom"] == piece_gratuite_data.nom))
+            try:
+                piece_remplacement.charger_image("Images.zip")
+            except NameError:
+                pass
+            
+            # Remplacer la pièce la plus chère
+            index_remplacement = max(range(len(candidates)), key=lambda i: candidates[i].cout_gemmes)
+            candidates[index_remplacement] = piece_remplacement
+            
+        # 5. Configuration des portes pour chaque candidate (la porte d'entrée est ouverte/déverrouillée)
         for p in candidates:
+            # La porte par laquelle on entre DOIT être ouverte (niv 0)
             p.portes_objets[porte_requise] = Porte(niveau=0, ouverte=True)
             for dir, exists in p.portes.items():
+                # Si une autre porte existe
                 if exists and dir != porte_requise and dir not in p.portes_objets:
                     niveau = Porte.generer_niveau_verrouillage(ligne_nouvelle, self.lignes)
-                    p.portes_objets[dir] = Porte(niveau=niveau, ouverte=(niveau == 0))
+                    p.portes_objets[dir] = Porte(niveau=niveau, ouverte=False)
 
         random.shuffle(candidates)
         return candidates

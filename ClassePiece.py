@@ -117,13 +117,11 @@ class Piece:
         """
         if not self.peut_creuser():
             return {'success': False, 'message': "Aucun endroit où creuser ici ou déjà creusé."}
-            
-        # Marquer comme creusé
         self.endroit_creuse = True
             
         chance_base = 0.6
         if patte_lapin_active:
-                chance_base = min(1.0, chance_base + 0.2) # Augmente la chance de succès de 20% max 100%
+            chance_base = min(1.0, chance_base + 0.2) # Augmente la chance de succès de 20% max 100%
 
         # Déterminer si on trouve quelque chose
         if random.random() < chance_base:
@@ -152,16 +150,19 @@ class Piece:
             if objet_trouve is None:
                 objet_trouve = "Pièce d'Or" 
 
-                return {
-                    'success': True, 
-                    'objet': objet_trouve,
-                    'message': f"Vous creusez et trouvez : {objet_trouve} !"
-                }
-            else:
-                return {
-                    'success': False,
-                    'message': "Vous creusez mais ne trouvez rien..."
-                }
+            # RETOURNER LE RÉSULTAT DE SUCCÈS ICI (après avoir déterminé l'objet)
+            return {
+                'success': True, 
+                'objet': objet_trouve,
+                'message': f"Vous creusez et trouvez : {objet_trouve} !"
+            }
+        else:
+            # RETOURNER LE RÉSULTAT D'ÉCHEC ICI
+            return {
+                'success': False,
+                'objet': None,
+                'message': "Vous creusez mais ne trouvez rien..."
+            }
         
     def charger_image(self, zip_path="Images.zip"):
         """

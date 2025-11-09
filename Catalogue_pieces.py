@@ -19,7 +19,7 @@ catalogue_pieces = [
     {
         "nom": "The Foundation",
         "couleur": "bleue",
-        "portes": {"up": True, "down": True, "left": True, "right": True},
+        "portes": {"up": False, "down": True, "left": True, "right": True},
         "loot": {
             "garanti": ["Pièce d'Or", "Pièce d'Or", "Gemme"], 
             "aleatoire": [("Pièce d'Or", 0.7), ("Clé", 0.5), ("Pelle", 0.2)]
@@ -286,7 +286,7 @@ catalogue_pieces = [
             "aleatoire": [("Pièce d'Or", 0.6), ("Pelle", 0.4), ("Kit de Crochetage", 0.2)]
         },
         "endroits_creuser": 1,
-        "image": "Images/workshop.webp",
+        "image": "Images/workshop.png",
         "cout_gemmes": 0,
         "rarete": 1
     },
@@ -299,7 +299,7 @@ catalogue_pieces = [
             "aleatoire": [("Gemme", 0.4), ("Clé", 0.3), ("Dé", 0.2)]
         },
         "endroits_creuser": 0,
-        "image": "Images/foyer.webp",
+        "image": "Images/foyer.png",
         "cout_gemmes": 2,
         "rarete": 2
     },
@@ -312,7 +312,7 @@ catalogue_pieces = [
             "aleatoire": [("Banane", 0.4), ("Clé", 0.2), ("Repas", 0.3)]
         },
         "endroits_creuser": 1,
-        "image": "Images/veranda.webp",
+        "image": "Images/veranda.png",
         "cout_gemmes": 2,
         "rarete": 2
     },
@@ -330,7 +330,7 @@ catalogue_pieces = [
             ]
         },
         "endroits_creuser": 0,
-        "image": "Images/showroom.webp",
+        "image": "Images/showroom.png",
         "cout_gemmes": 2,
         "rarete": 3
     }
