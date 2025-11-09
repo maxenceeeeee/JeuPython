@@ -40,16 +40,16 @@ L'objectif est de traverser le manoir en partant de la pièce "Entrance Hall" (s
 La partie est gagnée si vous atteignez l'Antichambre. La partie est perdue si votre compteur de Pas (👣) tombe à 0.
 
 ### Commandes
-# ZQSD : Se déplacer dans le manoir (Haut, Gauche, Bas, Droit). Le déplacement d'une pièce à l'autre coûte 1 Pas.
+##### ZQSD : Se déplacer dans le manoir (Haut, Gauche, Bas, Droit). Le déplacement d'une pièce à l'autre coûte 1 Pas.
 
 ### Découverte de Pièces
 Lorsque vous ouvrez une porte vers une case vide (noire), le jeu se met en pause et vous propose 3 nouvelles pièces au choix.
 
-# Touches 1, 2, 3 : Choisir la pièce que vous souhaitez placer.
+##### Touches 1, 2, 3 : Choisir la pièce que vous souhaitez placer.
 
 Certaines pièces coûtent des Gemmes (💎) pour être choisies. Ce coût est indiqué sur la carte de sélection.
 
-# Touche R : Dépenser un Dé (🎲) pour relancer le tirage des 3 pièces.
+##### Touche R : Dépenser un Dé (🎲) pour relancer le tirage des 3 pièces.
 
 
 Portes Verrouillées
