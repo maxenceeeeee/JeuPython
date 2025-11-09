@@ -16,7 +16,7 @@ Ce projet nécessite Python 3.10+ et les dépendances listées dans `requirement
 ### 1. Installation
 1.  Clonez ce dépôt Git (ou téléchargez les fichier ZIP).
     ```bash
-    git clone [URL_DE_VOTRE_DEPOT_GIT]
+    git clone https://github.com/maxenceeeeee/JeuPython.git
     cd JeuPython
     ```
 
