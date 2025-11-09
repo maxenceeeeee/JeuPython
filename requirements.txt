@@ -2,4 +2,12 @@
 #Dans le terminal installer pygame : 
 pip install pygame
 
+#Autres exigences : 
+#Avoir les modules suivants installés : 
+import random 
+import os 
+from zipfile import ZipFile 
+from io import BytesIO
+from typing import List
 
+#Etre sûr d'avoir les fichiers Images.zip pour les images des salles et Images_objets pour les images des objets

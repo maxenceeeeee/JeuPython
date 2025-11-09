@@ -3,9 +3,6 @@ from ClassePiece import Piece
 from ClassePorte import Porte
 from Catalogue_pieces import catalogue_pieces
 from typing import List
-from zipfile import ZipFile
-from io import BytesIO
-import os
 
 class Manoir:
     """
@@ -195,7 +192,6 @@ class Manoir:
         directions_opposees = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}
         porte_requise = directions_opposees[direction_mouvement]
 
-        # 1. Filtrer la pioche pour ne garder que les pièces avec la porte requise
         pioche_compatible = [p for p in self.pioche if p.portes.get(porte_requise, False)]
 
         if not pioche_compatible:
@@ -246,12 +242,9 @@ class Manoir:
             index_remplacement = max(range(len(candidates)), key=lambda i: candidates[i].cout_gemmes)
             candidates[index_remplacement] = piece_remplacement
             
-        # 5. Configuration des portes pour chaque candidate (la porte d'entrée est ouverte/déverrouillée)
         for p in candidates:
-            # La porte par laquelle on entre DOIT être ouverte (niv 0)
             p.portes_objets[porte_requise] = Porte(niveau=0, ouverte=True)
             for dir, exists in p.portes.items():
-                # Si une autre porte existe
                 if exists and dir != porte_requise and dir not in p.portes_objets:
                     niveau = Porte.generer_niveau_verrouillage(ligne_nouvelle, self.lignes)
                     p.portes_objets[dir] = Porte(niveau=niveau, ouverte=False)

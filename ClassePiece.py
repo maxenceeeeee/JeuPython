@@ -3,7 +3,7 @@ import pygame
 import os
 from zipfile import ZipFile
 from io import BytesIO
-from Catalogue_pieces import catalogue_pieces
+from Catalogue_pieces import catalogue_pieces 
 import random
 
 class Piece:
@@ -11,65 +11,49 @@ class Piece:
     Représente une pièce du manoir.
 
     Attributs :
-        nom (str) : Nom de la pièce.
-        couleur (str) : Couleur principale de la pièce.
-        portes (dict) : Dictionnaire des portes {'up', 'down', 'left', 'right'} avec booléens.
-        loot (dict) : Contient les objets garantis, aléatoires et boutique.
-        image_nom (str) : Nom du fichier image de la pièce.
-        image (pygame.Surface) : Image chargée pour l'affichage.
-        cout_gemmes (int) : Coût en gemmes pour choisir cette pièce.
-        rarete (int) : Niveau de rareté de la pièce (0-3).
-        portes_objets (dict) : Dictionnaire des objets Porte correspondant aux directions.
-        magasin (list) : Contenu de la boutique (si présent dans le loot).
-        endroits_creuser (int) : Nombre d'endroits où le joueur peut creuser.
-        endroit_creuse (bool) : Indique si la pièce a déjà été creusée.
-    
+    # ... (Vos attributs existants)
+        cadenas_casse (bool) : Indique si le cadenas du coffre a été brisé (False = verrouillé). NOUVEAU
+        a_coffre (bool) : Indique si la pièce contient un coffre. NOUVEAU
     """
 
-    def __init__(self, nom, couleur, portes, loot, image, cout_gemmes=0, rarete=0, endroits_creuser=0):
+    def __init__(self, nom, couleur, portes, loot, image, cout_gemmes=0, rarete=0, endroits_creuser=0, a_coffre=False):
         """
         Initialise une pièce du manoir.
 
         Args:
-            nom (str): Nom de la pièce.
-            couleur (str): Couleur principale de la pièce (ex: 'bleue', 'dorée', etc.).
-            portes (dict): Dictionnaire indiquant les directions et si une porte est présente (True/False).
-            loot (dict): Dictionnaire de butin (garanti, aleatoire) et boutique.
-            image (str): Nom du fichier image.
-            cout_gemmes (int): Coût en gemmes pour choisir cette pièce. 
-            rarete (int): Rareté de la pièce (0-3).
-            endroits_creuser (int, optional) : Nombre d'endroits creusables. Defaults to 0.
-
+        # ... (Vos Args existants)
+            a_coffre (bool, optional) : Indique si la pièce contient un coffre verrouillé. Defaults to False.
         """
         self.nom = nom
         self.couleur = couleur
         self.portes_objets = {}
         self.loot = loot or {}  
         self.image_nom = image 
-        self.image = None  
+        self.image = None   
         self.cout_gemmes = cout_gemmes
         self.rarete = rarete
         self.portes = portes
         self.magasin = self.loot.get("magasin", None)
         
-        # Gestion des endroits à creuser
         self.endroits_creuser = endroits_creuser
         self.endroit_creuse = False
+        
+        # GESTION DU CADENAS (COFFRE)
+        self.a_coffre = a_coffre
+        self.cadenas_casse = not a_coffre 
 
     def afficher_infos(self):
-        """
-        Affiche les informations principales de la pièce.
-        - Nom et couleur
-        - Loot garanti et aléatoire
-        - Coût et rareté
-        - Endroits à creuser et état
-        - Portes disponibles avec niveau
-        """
+        # ... (méthode inchangée)
         print(f"Pièce : {self.nom}")
         print(f"Couleur : {self.couleur.capitalize()}")
         print(f"Loot : {self.loot}")
         print(f"Coût : {self.cout_gemmes} gemmes, Rareté : {self.rarete}")
         print(f"Endroits à creuser : {self.endroits_creuser} (creusé: {self.endroit_creuse})")
+        
+        if self.a_coffre: 
+            etat_cadenas = "Ouvert" if self.cadenas_casse else "Verrouillé"
+            print(f"Coffre : Présent ({etat_cadenas})")
+            
         print("Portes :")
         for direction, porte in self.portes.items():
             if porte:
@@ -77,16 +61,7 @@ class Piece:
         print()
 
     def niveau_porte(self, direction: str) -> int:
-        """ 
-        Retourne le niveau de verrouillage de la porte dans la direction donnée.
-
-        Args:
-            direction (str) : Direction de la porte ('up', 'down', 'left', 'right').
-
-        Returns:
-            int : Niveau de la porte si elle existe, -1 sinon.
-        """
-        
+        # ... (méthode inchangée)
         porte = self.portes_objets.get(direction)
         if porte is not None:
             return porte.niveau
@@ -94,38 +69,18 @@ class Piece:
             return -1
 
     def peut_creuser(self) -> bool:
-        """
-        Vérifie si on peut creuser dans cette pièce.
-        
-        Returns:
-            bool : True si on peut creuser, False sinon.
-        """
+        # ... (méthode inchangée)
         return self.endroits_creuser > 0 and not self.endroit_creuse
 
     def creuser(self, patte_lapin_active: bool) -> dict:
-        """
-        Tente de creuser dans la pièce et retourne le résultat.
-
-        Args:
-        patte_lapin_active (bool) : Indique si l'objet 'Patte de Lapin' est actif pour augmenter la chance.
-
-        Returns:
-            dict : Contient :
-                - 'success' (bool) : True si un objet a été trouvé, False sinon.
-                - 'objet' (str) : Nom de l'objet trouvé (si success=True).
-                - 'message' (str) : Message à afficher au joueur.
-        """
         if not self.peut_creuser():
             return {'success': False, 'message': "Aucun endroit où creuser ici ou déjà creusé."}
         self.endroit_creuse = True
             
         chance_base = 0.6
         if patte_lapin_active:
-            chance_base = min(1.0, chance_base + 0.2) # Augmente la chance de succès de 20% max 100%
-
-        # Déterminer si on trouve quelque chose
+            chance_base = min(1.0, chance_base + 0.2) 
         if random.random() < chance_base:
-            # Table de loot pour le creusage
             loot_possibles = [
                 ("Pièce d'Or", 0.3),
                 ("Clé", 0.25), 
@@ -136,7 +91,6 @@ class Piece:
                 ("Dé", 0.02)
             ]
                 
-            # Tirer un objet au sort selon les probabilités
             objet_trouve = None
             r = random.random()
             cumul = 0
@@ -146,34 +100,49 @@ class Piece:
                     objet_trouve = objet
                     break
                 
-            # S'assurer de toujours trouver quelque chose si succès
             if objet_trouve is None:
                 objet_trouve = "Pièce d'Or" 
 
-            # RETOURNER LE RÉSULTAT DE SUCCÈS ICI (après avoir déterminé l'objet)
             return {
                 'success': True, 
                 'objet': objet_trouve,
                 'message': f"Vous creusez et trouvez : {objet_trouve} !"
             }
         else:
-            # RETOURNER LE RÉSULTAT D'ÉCHEC ICI
             return {
                 'success': False,
                 'objet': None,
                 'message': "Vous creusez mais ne trouvez rien..."
             }
+
+    def tenter_casser_cadenas(self) -> dict:
+        """
+        Tente de briser le cadenas si un coffre est présent et verrouillé.
+        """
+        if not self.a_coffre:
+            return {'success': False, 'message': f"Il n'y a pas de cadenas ou de coffre à briser dans {self.nom}."}
+            
+        if self.cadenas_casse:
+            return {'success': False, 'message': "Le coffre dans cette pièce est déjà ouvert."}
+            
+        self.cadenas_casse = True
+                
+        loot_trouve = []
         
+        if self.loot.get("coffre_loot"):
+            for nom_item, quantite in self.loot["coffre_loot"].items():
+                loot_trouve.extend([nom_item] * quantite)
+        else:
+            loot_trouve.append("Clé")
+            
+        return {
+            'success': True,
+            'loot_trouve': loot_trouve,
+            'message': f"Le Marteau a brisé le cadenas du coffre!"
+        }
+    
     def charger_image(self, zip_path="Images.zip"):
-        """
-        Charge l'image de la pièce depuis un fichier ZIP contenant toutes les images.
-
-        Args:
-            zip_path (str, optional) : Chemin vers l'archive ZIP contenant les images. Defaults to "Images.zip".
-
-        Notes:
-            Si l'image n'existe pas dans le ZIP, une image par défaut est générée.
-        """
+        # ... (méthodes de gestion d'image inchangées)
         if self.image is not None:
             return
         
@@ -187,7 +156,6 @@ class Piece:
 
         try:
             with ZipFile(zip_path_complet, "r") as archive:
-                # Vérifier si l'image existe dans le ZIP
                 if self.image_nom in archive.namelist():
                     with archive.open(self.image_nom) as file:
                         file_bytes = BytesIO(file.read())
@@ -201,7 +169,6 @@ class Piece:
             self._creer_image_par_defaut()
 
     def _creer_image_par_defaut(self):
-        """Crée une image par défaut avec la couleur de la pièce."""
         self.image = pygame.Surface((80, 80))
         couleurs = {
             "bleue": (0, 0, 255),

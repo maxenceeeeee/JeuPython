@@ -36,7 +36,7 @@ class Porte:
 
     def ouvrir(self, joueur) -> bool:
         """
-        [MODIFIÉ] Tente d'ouvrir la porte. Retourne True si déjà ouverte ou si Niv 0.
+        Tente d'ouvrir la porte. Retourne True si déjà ouverte ou si Niv 0.
         Si la porte est verrouillée (Niv 1 ou 2), retourne True si peut_ouvrir est True.
         """
         # Si la porte est déjà ouverte, rien à faire

@@ -17,7 +17,7 @@ class Inventaire:
         # OBJETS PERMANENTS POSSÉDÉS
         self.objets_permanents = {
             "Pelle": False,           
-            "Marteau": False,         
+            "Marteau": True,         
             "Kit de Crochetage": False, 
             "Détecteur de Métaux": False, 
             "Patte de Lapin": False,   

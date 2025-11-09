@@ -1,5 +1,3 @@
-import random
-
 ## CLASSE DE BASE : OBJET
 # on définit les propriétés communes à tous les objets du jeu.
 

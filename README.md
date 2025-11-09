@@ -30,6 +30,7 @@ Ce projet nécessite Python 3.10+ et les dépendances listées dans `requirement
 Pour démarrer le jeu, exécutez `main.py` :
 ```bash
 python main.py
+python3 main.py
 ```
 
 ## 🎮 Comment Jouer
