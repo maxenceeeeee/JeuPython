@@ -17,7 +17,7 @@ class Inventaire:
         # OBJETS PERMANENTS POSSÉDÉS
         self.objets_permanents = {
             "Pelle": False,           
-            "Marteau": True,         
+            "Marteau": False,         
             "Kit de Crochetage": False, 
             "Détecteur de Métaux": False, 
             "Patte de Lapin": False,   
@@ -110,8 +110,7 @@ class Inventaire:
         if objet_instance.type_objet == "Permanent":
             if objet_instance.nom in self.objets_permanents and not self.objets_permanents[objet_instance.nom]:
                 self.objets_permanents[objet_instance.nom] = True
-                # Activation de l'effet permanent (set detecteur_actif/patte_lapin_active)
-                objet_instance.utiliser(joueur_instance) 
+                objet_instance.utiliser(joueur_instance) #Appel polymorphique
                 print(f"Objet permanent obtenu et activé : {objet_instance.nom}")
             elif objet_instance.nom in self.objets_permanents and self.objets_permanents[objet_instance.nom]:
                  print(f"Objet permanent ignoré (déjà possédé) : {objet_instance.nom}")
@@ -119,8 +118,7 @@ class Inventaire:
                 print(f"Avertissement : Objet permanent '{objet_instance.nom}' non prévu dans l'inventaire.")
             
         elif objet_instance.type_objet == "Consommable":
-            # Si c'est un consommable, on appelle sa méthode utiliser immédiatement
-            objet_instance.utiliser(joueur_instance)
+            objet_instance.utiliser(joueur_instance) #Appel polymorphique
             
         else:
             print(f"Erreur: Type d'objet inconnu : {objet_instance.type_objet}")
