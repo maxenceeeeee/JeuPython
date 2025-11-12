@@ -8,6 +8,20 @@ import os
 from ClasseObjet import OBJET_MAP
 import random
 
+""" 
+La classe `Jeu` initialise Pygame, crée la fenêtre de jeu et gère la boucle principale 
+(`en_cours_gestion`). Elle possède des instances des autres classes majeures du projet, 
+notamment `Joueur` et `Manoir`, et maintient l’état courant du jeu (par exemple 
+`self.etat_jeu = "Deplacement"` ou `"Selection pieces"`).
+
+Responsabilités principales :
+    - Initialiser et configurer l’environnement Pygame.
+    - Centraliser la logique de contrôle du jeu (mouvements, actions, achats, etc.).
+    - Gérer les affichages (grille, inventaire, magasin, messages...).
+    - Interpréter les entrées clavier et les événements utilisateur.
+    - Orchestrer les interactions entre le joueur, le manoir et les objets.
+"""
+
 # CONSTANTES D'AFFICHAGE
 colonnes_jeu = 5
 lignes_jeu = 9 
@@ -33,7 +47,14 @@ def charger_images_objets():
         dict: Dictionnaire mappant le nom des objets aux surfaces Pygame.
     """
     dossier_images = os.path.join(os.path.dirname(__file__), "Images_objets")
-    
+    """
+    Charge toutes les images d'objets à partir du dossier Images_objets.
+
+    Returns:
+        dict: Dictionnaire associant le nom de l'objet à son image pygame redimensionnée.
+              Si une image est manquante, la valeur est None.
+    """
+
     images = {}
     correspondances = {
         "Pelle": "spade.png",
@@ -72,9 +93,21 @@ class Jeu:
     """
     Classe principale du jeu gérant la boucle principale, les états, 
     l'affichage de l'interface et la logique des interactions du joueur.
+    
+    def __init__(self):
+
+        Classe principale gérant la logique globale du jeu (affichage, état, interactions).
+
+    Attributes importants:
+        joueur (Joueur): Instance représentant le joueur.
+        manoir (Manoir): Grille du jeu contenant les pièces.
+        etat_jeu (str): État courant du jeu ("Deplacement", "Selection pieces", "Magasin", etc.).
+        screen (pygame.Surface): Fenêtre principale.
+        images_objets (dict): Images des objets du jeu.
+        message_statut (str): Message d'information affiché à l'écran.
     """
     def __init__(self):
-        """Initialise Pygame, la fenêtre, le joueur, le manoir et les états de jeu."""
+        """Initialise les composantes du jeu, la fenêtre pygame et les objets principaux. """
         pygame.init()
         pygame.display.set_caption("Blue Prince Game")
         self.screen = pygame.display.set_mode((affichage_largeur, affichage_hauteur))
@@ -110,6 +143,7 @@ class Jeu:
 
     def affichage_d_v(self): 
         """Affiche l'écran de victoire ou de défaite (Game Over)."""
+        """Affiche un écran de fin de partie (victoire ou défaite)."""
         fenetre_fin = pygame.Surface((affichage_largeur, affichage_hauteur), pygame.SRCALPHA)
         fenetre_fin.fill((0, 0, 0, 220)) 
         self.screen.blit(fenetre_fin, (0, 0))
@@ -133,7 +167,7 @@ class Jeu:
         self.screen.blit(instruction_surface, instruction_rect)
 
     def affichage_grille(self):
-        """Dessine la grille du manoir et les pièces placées."""
+        """Affiche la grille du manoir et les pièces placées. """
         self.screen.fill((168, 195, 188))
         
         fond_grille_rect = pygame.Rect(start_x_grille, start_y_grille, largeur_grille_seule, hauteur_grille_seule)
@@ -156,7 +190,7 @@ class Jeu:
         pygame.draw.rect(self.screen, (255, 255, 255), bords_jeu, 2)
 
     def affichage_inventaire(self): 
-        """Dessine et met à jour l'affichage de l'inventaire et des ressources du joueur."""
+        """Affiche l'inventaire du joueur sur la droite de l'écran. """
         x = start_x_grille + largeur_grille_seule + espace_inventaire
         y = start_y_grille
         
@@ -229,7 +263,7 @@ class Jeu:
             y_consommable += 50
 
     def affichage_curseur(self): 
-        """Dessine un curseur jaune sur la case actuelle du joueur."""
+        """Affiche un contour jaune autour de la position actuelle du joueur. """
         curseur_c = self.joueur.position_colonne
         curseur_r = self.joueur.position_ligne
         
@@ -326,7 +360,7 @@ class Jeu:
             self.screen.blit(cout_surface, cout_rect)
 
     def affichage_magasin(self):
-        """Affiche l'interface du magasin lorsque le joueur entre dans une pièce dorée."""
+        """Affiche le menu de la boutique avec les objets disponibles à l'achat. """
         overlay = pygame.Surface((affichage_largeur, affichage_hauteur), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 200))
         self.screen.blit(overlay, (0, 0))
@@ -379,13 +413,11 @@ class Jeu:
 
     def _instancier_objet(self, nom_item: str):
         """
-        Instancie un objet du jeu à partir de son nom, en utilisant le dictionnaire OBJET_MAP.
-
-        Args:
-            nom_item (str): Nom de la classe de l'objet à instancier.
-
+        Crée une instance d'objet selon son nom.
+        Args: 
+            nom_item (str): Nom de l'objet à instancier
         Returns:
-            Objet: Une instance de l'objet, ou None.
+            Objets: Instance de la classe correspondante, ou None si l'objet est inconnu.
         """
         classe_objet = OBJET_MAP.get(nom_item)
         if classe_objet:
@@ -393,7 +425,11 @@ class Jeu:
 
     
     def _generer_et_ramasser_butin(self, piece: Piece):
-        """Génère et ajoute le butin aléatoire ou garanti de la pièce à l'inventaire du joueur, en appliquant les bonus (Détecteur, Patte de Lapin)."""
+        """
+        Génère le butin obtenu dans une pièce et l'ajoute à l'inventaire du joueur.
+        Args:
+            piece (Piece): La pièce fouillée.
+        """
         objets_trouvés = []
         
         detecteur_actif = self.joueur.inventaire.detecteur_actif
@@ -447,14 +483,22 @@ class Jeu:
         self.message_statut += message_loot + ", ".join(items_str_list)
         
     def _entrer_magasin(self, piece: Piece):
-        """Passe à l'état Magasin si la pièce actuelle en contient un."""
+        """ 
+        Ouvre le magasin si la pièce en contient un.
+        Args:
+            piece (Piece): Pièce contenant potentiellement un magasin.
+        """
         if piece.magasin:
             self.magasin_items = piece.magasin
             self.etat_jeu = "Magasin"
             self.message_statut = "Boutique ! Touche (1, 2, 3) pour acheter. (A) pour quitter."
 
     def _acheter_objet(self, index_choix: int):
-        """Gère l'achat d'un objet dans le magasin en utilisant les Pièces d'Or."""
+        """ 
+        Gère l'achat d'un objet dans le magasin.
+        Args:
+            index_choix (int): Index du choix d'objet (1,2,3...)
+        """
         if not (0 <= index_choix < len(self.magasin_items)):
             return
 
@@ -474,7 +518,7 @@ class Jeu:
             self.message_statut = f"Pas assez d'Or ! (Requis: {prix})"
 
     def _mettre_a_jour_creusage_disponible(self):
-        """Met à jour l'état `creusage_disponible` en fonction de la pièce actuelle et de la possession de la Pelle."""
+        """Met à jour la disponibilité de l’action ‘creuser’ selon la pièce et l’équipement."""
         piece_actuelle = self.manoir.get_piece_at(
             self.joueur.position_ligne, 
             self.joueur.position_colonne
@@ -506,8 +550,7 @@ class Jeu:
         )
 
     def creuser_dans_piece_actuelle(self):
-        """Tente de creuser dans la pièce actuelle si la Pelle est disponible."""
-        
+        """Tente de creuser la pièce actuelle, ajoutant un objet si trouvé."""
         if not self.joueur.verifie_pelle():
             self.message_statut = "Vous avez besoin d'une pelle pour creuser !"
             return
@@ -575,7 +618,11 @@ class Jeu:
 
 
     def tenter_deblocage(self, choix: int):
-        """Tente de déverrouiller la porte en attente avec le choix d'outil/clé."""
+        """
+        Tente de déverrouiller la porte en attente avec le choix d'outil/clé.
+        Args :
+            choix (int): Numéro de la méthode choisie (1=kit, 2=clé)
+        """
         porte = self.porte_a_debloquer
         
         if not porte or porte.niveau == 0:
@@ -619,7 +666,12 @@ class Jeu:
             self.porte_direction = None
 
     def deplacement(self, direction):
-        """Gère la tentative de déplacement du joueur vers une case adjacente."""
+        """
+        Gère le déplacement du joueur dans la direction donnée.
+
+        Args:
+            direction (str): Direction du déplacement ('haut', 'bas', 'gauche', 'droite').
+        """
         if self.etat_jeu not in ["Deplacement", "Magasin", "Selection pieces"]: 
             if self.etat_jeu != "Selection pieces":
                  self.message_statut = "Veuillez choisir une pièce (Touches 1, 2, 3)"
@@ -723,7 +775,20 @@ class Jeu:
                 self.message_statut = "Porte verrouillée (Niv 2). Clé nécessaire. (Manquant)"
 
     def selectionner_piece(self, index_choix: int):
-        """Gère la sélection et le placement de la pièce choisie (coût en Gemmes)."""
+        """
+        Permet au joueur de choisir l'une des pièces proposées lors du tirage.
+
+        La méthode vérifie si le joueur a assez de gemmes pour acheter la pièce.
+        Si c’est le cas, elle la place sur la grille, déplace le joueur vers cette nouvelle pièce,
+        génère le butin et met à jour l’état du jeu.
+        Si le joueur n’a pas assez de gemmes, un message d’erreur est affiché.
+
+        Args:
+            index_choix (int): Index de la pièce choisie dans la liste des pièces proposées.
+
+        Returns:
+            None
+        """
         if not (0 <= index_choix < len(self.pieces_proposees)):
             return 
 
@@ -759,7 +824,14 @@ class Jeu:
             self.message_statut = f"Pas assez de gemmes ! (Requis : {piece_choisie.cout_gemmes})"
 
     def utiliser_de(self,):
-        """Relance le tirage des pièces proposées en échange d'un Dé."""
+        """
+        Utilise un dé de l’inventaire du joueur pour relancer un tirage de pièces.
+
+        Si le joueur a un dé disponible :
+            - Le jeu génère à nouveau trois pièces potentielles.
+            - Si aucune pièce valide n’est trouvée, la partie est perdue.
+        Sinon, un message indique qu’aucun dé n’est disponible.
+        """
         if self.joueur.inventaire.depenser_des(1): 
             ligne, col = self.nouvelle_piece_coords
             self.pieces_proposees = self.manoir.tirer_trois_pieces(
@@ -779,7 +851,16 @@ class Jeu:
             self.message_statut = "Vous n'avez pas de Dés !"
 
     def gestion_evenements(self):
-        """Gère les événements Pygame (clics de souris, pressions de touches)."""
+        """
+        Gère tous les événements du jeu, notamment les entrées clavier et la fermeture de la fenêtre.
+
+        Selon l’état actuel du jeu :
+            - "Fin" : permet de quitter avec Entrée.
+            - "Déblocage Porte" : choix de méthode pour ouvrir une porte.
+            - "Déplacement" : contrôle du joueur (ZQSD), utilisation d’objets ou creusage.
+            - "Sélection pièces" : choix parmi les pièces proposées ou relance avec un dé.
+            - "Magasin" : achat d’objets ou sortie du magasin.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.flag_en_cours = False
@@ -848,7 +929,18 @@ class Jeu:
                         self.message_statut = "Vous quittez la boutique."
     
     def utiliser_objet_permanent(self, nom_objet: str):
-        """Déclenche l'effet d'un objet permanent (non consommé)."""
+        """
+        Utilise un objet permanent (comme une Pelle ou un Détecteur de Métaux) depuis l’inventaire.
+
+        L’objet reste dans l’inventaire après utilisation.  
+        Si le joueur ne possède pas l’objet, un message d’erreur est affiché.
+
+        Args:
+            nom_objet (str): Nom de l’objet permanent à utiliser.
+
+        Returns:
+            bool: True si l’objet a été utilisé avec succès, False sinon.
+        """
         if not self.joueur.inventaire.a_objet_permanent(nom_objet):
             self.message_statut = f"Vous n'avez pas de {nom_objet} !"
             return False
@@ -871,7 +963,14 @@ class Jeu:
             return False
     
     def verification_fin_jeu(self):
-        """Vérifie si les conditions de victoire ou de défaite sont remplies."""
+
+        """
+        Vérifie si la partie est terminée.
+
+        Met à jour l’état du jeu selon :
+            - La victoire (objectif atteint).
+            - La défaite (plus de pas restants ou condition de fin activée).
+        """
         if self.game_over or self.victoire:
             self.etat_jeu = "Fin"
             return
@@ -881,7 +980,18 @@ class Jeu:
             self.etat_jeu = "Fin"
             
     def en_cours_gestion(self):
-        """Boucle principale du jeu."""
+        """
+        Boucle principale du jeu (game loop).
+        
+        Gère :
+            - Les événements (clavier, fermeture).
+            - La mise à jour de l’état du jeu.
+            - L’affichage de la grille, de l’inventaire, du curseur, du magasin, etc.
+            - La synchronisation d’affichage à 60 FPS.
+
+        La boucle continue tant que le drapeau `flag_en_cours` est True.
+        Lorsque le jeu se termine, pygame est proprement fermé.
+        """
         while self.flag_en_cours == True:
             
             self.gestion_evenements()

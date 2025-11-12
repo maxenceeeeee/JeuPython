@@ -1,7 +1,7 @@
 class Inventaire:
     """
     Cette classe représente le sac à dos du joueur. Son rôle est de stocker 
-    et gérer toutes les ressources numériques (pas, clés, gemmes, etc.) et les objets 
+    et gérer toutes les ressources numériques (pas, clés, gemmes, etc.) et les objets
     permanents du jeu, sans s'occuper de l'affichage (qui sera fait par l'interface Pygame).
     """
     
