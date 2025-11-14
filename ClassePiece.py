@@ -142,7 +142,6 @@ class Piece:
         }
     
     def charger_image(self, zip_path="Images.zip"):
-        # ... (méthodes de gestion d'image inchangées)
         if self.image is not None:
             return
         

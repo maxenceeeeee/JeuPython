@@ -200,7 +200,7 @@ class Manoir:
         # Fonction pour calculer le poids selon la rareté
         def poids_rarete(piece):
             # Favorise les pièces de rareté inférieure (plus communes)
-            return 1 / (0.5** max(piece.rarete, 0)) # Modification ici (3 -> 3.5)
+            return 1 / (0.2** max(piece.rarete, 0)) 
         
         poids = [poids_rarete(p) for p in pioche_compatible]
 
